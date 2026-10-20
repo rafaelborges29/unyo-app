@@ -43,8 +43,20 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   @override
   Future<List<User>> fetchAllLoggedInUsers() async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    _anilistUsersBox = await _openUsersBox();
     return [..._anilistUsersBox.values];
+  }
+
+  Future<Box<AnilistUserModel>> _openUsersBox() async {
+    final legacyUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    final usersBox = await Hive.openBox<AnilistUserModel>("anilistUsersById");
+    // Legacy snapshots have no timestamps. Keep the originals for recovery;
+    // duplicate IDs use the last Hive entry, without replacing migrated users.
+    await usersBox.putAll({
+      for (final user in legacyUsersBox.values)
+        if (!usersBox.containsKey(user.id)) user.id: user,
+    });
+    return usersBox;
   }
 
   @override
@@ -73,14 +85,13 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   @override
   Future<void> updateUserInfo(User user) async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
-    if (_anilistUsersBox.containsKey(user.name)) {
+    _anilistUsersBox = await _openUsersBox();
+    if (_anilistUsersBox.containsKey(user.id)) {
       _logger.w("User ${user.name} already exists in the registered anilist users, updating info");
-      await _anilistUsersBox.put(user.name, user as AnilistUserModel);
     } else {
       _logger.i("Adding new user ${user.name} to the registered anilist users");
-      await _anilistUsersBox.put(user.name, user as AnilistUserModel);
     }
+    await _anilistUsersBox.put(user.id, user as AnilistUserModel);
     _loggedUserNotifier.updateUser(user);
   }
 
@@ -217,7 +228,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   }
 
   Future<void> _createUser(String accessCode) async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    _anilistUsersBox = await _openUsersBox();
     ApiResponse<AuthTokenEntity> authToken = await getAuthToken(accessCode);
     Map<String, String> graphQlHeaders = {"Authorization": "Bearer ${authToken.data.accessToken}"};
     ApiGraphQLResponse<ViewerGraphqlEntity> viewerDto = await _anilistGraphQLService
