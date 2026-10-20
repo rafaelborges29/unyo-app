@@ -60,7 +60,16 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
 
   void _init() async {
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) {
-      emit(state.copyWith(loggedUser: loggedUser));
+      final serviceChanged = state.loggedUser.settings.service != loggedUser.settings.service;
+      emit(
+        serviceChanged
+            ? AnimeAdvancedSearchState(
+                loggedUser: loggedUser,
+                searchQuery: state.searchQuery,
+                effects: state.effects,
+              )
+            : state.copyWith(loggedUser: loggedUser),
+      );
       _getLoggedUserServiceFilters(loggedUser);
       _performAnimeAdvancedSearch();
     });
@@ -173,7 +182,8 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
 
   Future<void> _getLoggedUserServiceFilters(User loggedUser) async {
     try {
-      final filters = await _animeRepository.getUserAnimeAdvancedSearchFilters();
+      final filters = await _animeRepository.getUserAnimeAdvancedSearchFilters(loggedUser);
+      if (isClosed || state.loggedUser.settings.service != loggedUser.settings.service) return;
       emit(
         state.copyWith(
           genresFilters: (filters['genres']?.$1 ?? false, filters['genres']?.$2 ?? []),
@@ -189,23 +199,31 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
         ),
       );
     } catch (e, stackTrace) {
+      if (isClosed || state.loggedUser.settings.service != loggedUser.settings.service) return;
       _logger.e("Error getting logged user service filters $e", stackTrace: stackTrace);
       handleError("Error getting logged user service filters", stackTrace: stackTrace);
     }
   }
 
   Future<void> _performAnimeAdvancedSearch() async {
-    List<Anime> searchResults = await _animeRepository.performAnimeAdvancedSearch(
-      state.searchQuery,
-      state.selectedGenres,
-      state.selectedSeason,
-      state.selectedFormat,
-      int.tryParse(state.selectedYear ?? ''),
-      state.selectedAiringStatus,
-      "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
-      1,
-      state.loggedUser
-    );
-    emit(state.copyWith(searchResults: searchResults));
+    final loggedUser = state.loggedUser;
+    try {
+      List<Anime> searchResults = await _animeRepository.performAnimeAdvancedSearch(
+        state.searchQuery,
+        state.selectedGenres,
+        state.selectedSeason,
+        state.selectedFormat,
+        int.tryParse(state.selectedYear ?? ''),
+        state.selectedAiringStatus,
+        "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
+        1,
+        loggedUser,
+      );
+      if (isClosed || state.loggedUser.settings.service != loggedUser.settings.service) return;
+      emit(state.copyWith(searchResults: searchResults));
+    } on UnsupportedError catch (e, stackTrace) {
+      if (isClosed || state.loggedUser.settings.service != loggedUser.settings.service) return;
+      handleError(e.message.toString(), stackTrace: stackTrace);
+    }
   }
 }

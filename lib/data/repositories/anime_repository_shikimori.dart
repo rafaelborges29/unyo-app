@@ -187,7 +187,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
   }
 
   @override
-  Future<Map<String, (bool, List<String>)>> getUserAnimeAdvancedSearchFilters() async {
+  Future<Map<String, (bool, List<String>)>> getUserAnimeAdvancedSearchFilters(User loggedUser) async {
     return {};
   }
 
