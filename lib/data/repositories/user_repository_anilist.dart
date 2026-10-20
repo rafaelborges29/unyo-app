@@ -227,10 +227,13 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
           headers: graphQlHeaders,
         );
     throwIfGraphQlError(viewerDto);
+    final existingUser = _anilistUsersBox.values
+        .where((user) => user.id == viewerDto.data.viewer.id.toString())
+        .firstOrNull;
     AnilistUserModel newAnilistUser = AnilistUserModel(
       id: viewerDto.data.viewer.id.toString(),
       name: viewerDto.data.viewer.name,
-      settings: SettingsModel.empty(),
+      settings: existingUser?.settings ?? SettingsModel.empty(),
       avatarImage: viewerDto.data.viewer.avatar.medium,
       bannerImage: viewerDto.data.viewer.bannerImage,
       accessCode: accessCode,
@@ -238,6 +241,9 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
       refreshToken: authToken.data.refreshToken,
     );
     await updateUserInfo(newAnilistUser);
+    if (existingUser != null && existingUser.name != newAnilistUser.name) {
+      await _anilistUsersBox.delete(existingUser.name);
+    }
     _newUserNotifier.updateUser(newAnilistUser);
   }
 }
