@@ -195,6 +195,12 @@ class _ExtensionsViewState extends State<_ExtensionsView> with TickerProviderSta
                       }),
                     ),
                   ),
+                  SizedBox(width: 8.w),
+                  IconButton(
+                    tooltip: "Reload extension repositories",
+                    onPressed: context.read<ExtensionsCubit>().refreshRepositories,
+                    icon: const Icon(Icons.refresh),
+                  ),
                 ],
               ),
             ),
