@@ -493,32 +493,35 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       _logger.i(
         "Fetching Anime Info from extension ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}",
       );
-      List<JSAnime> animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
-        state.selectedAnime.title.userPreferred,
-        selectedExtension,
-      );
-      if (animeResults.isEmpty) {
+      List<JSAnime> animeResults = [];
+      if (state.selectedAnime.title.userPreferred.trim().isNotEmpty) {
+        animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
+          state.selectedAnime.title.userPreferred,
+          selectedExtension,
+        );
+      }
+      if (animeResults.isEmpty && state.selectedAnime.title.english.trim().isNotEmpty) {
         _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}, trying alternative english title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
           state.selectedAnime.title.english,
           selectedExtension,
         );
       }
-      if (animeResults.isEmpty) {
+      if (animeResults.isEmpty && state.selectedAnime.title.nativeTitle.trim().isNotEmpty) {
         _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.english}, trying alternative native title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
           state.selectedAnime.title.nativeTitle,
           selectedExtension,
         );
       }
-      if (animeResults.isEmpty) {
+      if (animeResults.isEmpty && state.selectedAnime.title.romaji.trim().isNotEmpty) {
         _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.nativeTitle}, trying alternative romaji title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
           state.selectedAnime.title.romaji,
           selectedExtension,
         );
       }
-      int selectedAnimeResultIndex = await _fuzzySelectAnimeResultIndex(animeResults);
+      int selectedAnimeResultIndex = animeResults.isEmpty ? -1 : await _fuzzySelectAnimeResultIndex(animeResults);
       emit(state.copyWith(extensionAnimeResults: animeResults, selectedAnimeResultIndex: selectedAnimeResultIndex));
       if (animeResults.isNotEmpty) {
         showSnackBarEffect(

@@ -49,9 +49,12 @@ abstract class ShikimoriAnimeModel with _$ShikimoriAnimeModel implements Anime {
         id: _formatId(anime.id),
         idMal: anime.malId != "0" ? _formatId(anime.malId) : _formatId(anime.id),
         title: TitleModel(
-          romaji: anime.russian,
+          romaji: anime.name,
           english: anime.english,
-          userPreferred: anime.english,
+          userPreferred: [anime.english, anime.name, anime.japanese].firstWhere(
+            (title) => title.trim().isNotEmpty,
+            orElse: () => '',
+          ),
           nativeTitle: anime.japanese,
         ),
         averageScore: anime.score.toInt() * 10,
@@ -80,9 +83,12 @@ abstract class ShikimoriAnimeModel with _$ShikimoriAnimeModel implements Anime {
         id: _formatId(anime.id),
         idMal: anime.malId != "0" ? _formatId(anime.malId) : _formatId(anime.id),
         title: TitleModel(
-          romaji: anime.russian,
+          romaji: anime.name,
           english: anime.english,
-          userPreferred: anime.english,
+          userPreferred: [anime.english, anime.name, anime.japanese].firstWhere(
+            (title) => title.trim().isNotEmpty,
+            orElse: () => '',
+          ),
           nativeTitle: anime.japanese,
         ),
         averageScore: anime.score.toInt() * 10,
@@ -111,9 +117,12 @@ abstract class ShikimoriAnimeModel with _$ShikimoriAnimeModel implements Anime {
         id: _formatId(anime.id),
         idMal: anime.malId != "0" ? _formatId(anime.malId) : _formatId(anime.id),
         title: TitleModel(
-          romaji: anime.russian,
+          romaji: anime.name,
           english: anime.english,
-          userPreferred: anime.english,
+          userPreferred: [anime.english, anime.name, anime.japanese].firstWhere(
+            (title) => title.trim().isNotEmpty,
+            orElse: () => '',
+          ),
           nativeTitle: anime.japanese,
         ),
         averageScore: anime.score.toInt() * 10,
@@ -142,9 +151,12 @@ abstract class ShikimoriAnimeModel with _$ShikimoriAnimeModel implements Anime {
         id: _formatId(anime.id),
         idMal: anime.malId != "0" ? _formatId(anime.malId) : _formatId(anime.id),
         title: TitleModel(
-          romaji: anime.russian,
+          romaji: anime.name,
           english: anime.english,
-          userPreferred: anime.english,
+          userPreferred: [anime.english, anime.name, anime.japanese].firstWhere(
+            (title) => title.trim().isNotEmpty,
+            orElse: () => '',
+          ),
           nativeTitle: anime.japanese,
         ),
         averageScore: anime.score.toInt() * 10,
