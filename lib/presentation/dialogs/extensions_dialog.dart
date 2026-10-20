@@ -28,11 +28,13 @@ class ExtensionsSettingsDialog extends StatefulWidget {
 
 class _ExtensionsSettingsDialogState extends State<ExtensionsSettingsDialog> {
   late List<String> _currentRepositoriesUrls;
+  late List<Key> _repositoryKeys;
 
   @override
   void initState() {
     super.initState();
     _currentRepositoriesUrls = List.from(widget.currentRepositoriesUrls);
+    _repositoryKeys = List.generate(_currentRepositoriesUrls.length, (_) => UniqueKey());
   }
 
   @override
@@ -55,6 +57,7 @@ class _ExtensionsSettingsDialogState extends State<ExtensionsSettingsDialog> {
                     ..._currentRepositoriesUrls.mapIndexed(
                           (index, repoUrl) =>
                           Padding(
+                            key: _repositoryKeys[index],
                             padding: EdgeInsets.symmetric(horizontal: 24.0.w, vertical: 0),
                             child: Column(
                               children: [
@@ -74,6 +77,7 @@ class _ExtensionsSettingsDialogState extends State<ExtensionsSettingsDialog> {
                                       child: UnyoTextfield(
                                         label: null,
                                         hint: repoUrl,
+                                        initialValue: repoUrl,
                                         debounceMilliseconds: 0,
                                         onChange: (newValue) {
                                           setState(() {
@@ -91,6 +95,7 @@ class _ExtensionsSettingsDialogState extends State<ExtensionsSettingsDialog> {
                                             return;
                                           } else {
                                             _currentRepositoriesUrls.removeAt(index);
+                                            _repositoryKeys.removeAt(index);
                                           }
                                         });
                                       },
@@ -107,6 +112,7 @@ class _ExtensionsSettingsDialogState extends State<ExtensionsSettingsDialog> {
                       child: LightUnyoButton(text: "Add Repository", onPressed: () {
                         setState(() {
                           _currentRepositoriesUrls.add("");
+                          _repositoryKeys.add(UniqueKey());
                         });
                       }),
                     ),
