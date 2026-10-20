@@ -63,8 +63,6 @@ When setting up Unyo, make sure your AniList profile is set to either public or 
 
 ## Available Extensions
 
-Switching anime clears the previous title’s extension matches and playable episodes. If the new title has a saved extension, Unyo selects it and searches for that title before loading episodes.
-
 ### Remote Extensions
 
 The remote extensions for this app come from a custom API that uses [Aniyomi](https://github.com/aniyomiorg/aniyomi) extensions. If you wish to have a source added, you can open an issue with the name of the extension, and I'll try to integrate it. Because the original project was for Android, I had to adapt a lot of the codebase to work on PCs. This means that not all extensions will work (most likely a skill issue, to be honest -_-).
