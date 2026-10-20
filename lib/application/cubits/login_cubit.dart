@@ -138,13 +138,22 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
     if (context.mounted) closeDialogEffect(context);
   }
 
-  Future<void> fetchAllUsers() async {
+  Future<bool> fetchAllUsers() async {
     _logger.i("Fetching all logged in users");
-    List<User> usersAvailableLocal =
-        (await _userRepositoryLocal.fetchAllLoggedInUsers()).cast<User>();
-    List<User> usersAvailableAnilist =
-        (await _userRepositoryAnilist.fetchAllLoggedInUsers()).cast<User>();
-    _updateAvailableUsers(usersAvailableAnilist + usersAvailableLocal);
+    try {
+      List<User> usersAvailableLocal =
+          (await _userRepositoryLocal.fetchAllLoggedInUsers()).cast<User>();
+      List<User> usersAvailableAnilist =
+          (await _userRepositoryAnilist.fetchAllLoggedInUsers()).cast<User>();
+      if (isClosed) return false;
+      _updateAvailableUsers(usersAvailableAnilist + usersAvailableLocal);
+      return true;
+    } catch (e, stackTrace) {
+      if (!isClosed) {
+        handleError("Error loading saved users: $e", stackTrace: stackTrace);
+      }
+      return false;
+    }
   }
 
   void setUsersTheme(User user) async {
