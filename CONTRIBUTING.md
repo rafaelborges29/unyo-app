@@ -36,7 +36,6 @@ Thank you for your interest in contributing to **Unyo**! This guide covers every
 | Dart | Bundled with Flutter | |
 | Java | **17+** | Required for local Aniyomi/Tachiyomi extensions. |
 | Maven | 3.x | Required to build `unyo-core`. |
-| Go | 1.21+ | Required to build the torrent server binding. |
 
 ### Repository Layout
 
@@ -359,9 +358,9 @@ Output: `aniyomi-bridge/target/aniyomiBridge-1.0.0.jar`
 
 After building, copy the JAR to `unyo_lib/assets/unyo-core.jar` so the Flutter app picks it up.
 
-### Go Binding (Torrent Server)
+### Torrent Server
 
-The torrent server (`libmtorrentserver`) lives in a separate Go module (`go/binding/desktop/`). It must be compiled per-platform as a c-shared library. The CI handles this during releases.
+Platform-specific TorrServer executables are tracked in `assets/services/torrserver/` and bundled by Flutter through `pubspec.yaml`. `TorrentService` copies the matching executable to the application support directory and starts it as a process. No Go toolchain or separate torrent binding build is required.
 
 ---
 
