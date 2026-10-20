@@ -32,6 +32,7 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
 
   // Repositories
   final MangaRepository _mangaRepository;
+  int _searchRequestId = 0;
 
   MangaAdvancedSearchCubit(
     this._loggedUserNotifier,
@@ -183,6 +184,7 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
   }
 
   Future<void> _performMangaAdvancedSearch() async {
+    final requestId = ++_searchRequestId;
     List<Manga> searchResults = await _mangaRepository.performMangaAdvancedSearch(
       state.searchQuery,
       state.selectedGenres,
@@ -193,6 +195,7 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
       1,
       state.loggedUser
     );
+    if (requestId != _searchRequestId) return;
     emit(state.copyWith(searchResults: searchResults));
   }
 }
