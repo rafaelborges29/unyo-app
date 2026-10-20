@@ -72,6 +72,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   bool _videoServiceInitialized = false;
   Timer? _videoReadyTimer;
   Timer? _updateMediaEntryTimer;
+  int _aniskipRequestId = 0;
 
   VideoCubit(
     this._loggedUserNotifier,
@@ -160,7 +161,8 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   void _initVideoMetadata(VideoInfo videoInfo) {
-    Future.delayed(const Duration(seconds: 1), () => _getAniskipSkipTimes(state.selectedAnime, videoInfo));
+    final requestId = ++_aniskipRequestId;
+    Future.delayed(const Duration(seconds: 1), () => _getAniskipSkipTimes(state.selectedAnime, videoInfo, requestId));
     _triggerUserMediaEntryUpdate();
   }
 
@@ -181,7 +183,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     emit(state.copyWith(videoInfo: videoInfo, isLoading: false));
   }
 
-  Future<void> _selectNewEpisode(VideoInfo videoInfo) async {
+  Future<void> _selectNewEpisode(VideoInfo videoInfo, int requestId) async {
     _logger.i("Selecting new episode: Index ${videoInfo.playlistIndex}");
     await _videoService.changeVideo(
       video: videoInfo.currentVideo,
@@ -189,18 +191,24 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
       videoIndex: videoInfo.videoIndex,
       episodeIndex: videoInfo.playlistIndex,
     );
+    if (isClosed || requestId != _aniskipRequestId) return;
     emit(state.copyWith(videoInfo: videoInfo));
     _initVideoMetadata(videoInfo);
     _logger.i("VideoService updated for new episode.");
   }
 
-  Future<void> _getAniskipSkipTimes(Anime selectedAnime, VideoInfo videoInfo) async {
+  Future<void> _getAniskipSkipTimes(Anime selectedAnime, VideoInfo videoInfo, int requestId) async {
+    if (isClosed || requestId != _aniskipRequestId || selectedAnime.idMal <= 0) return;
+    if (videoInfo.playlistIndex < 0 || videoInfo.playlistIndex >= state.extensionEpisodeResults.length) return;
+    final episodeNumber = state.extensionEpisodeResults[videoInfo.playlistIndex].getEpisode_number();
+    if (!episodeNumber.isFinite || episodeNumber <= 0 || episodeNumber != episodeNumber.toInt()) return;
     double formattedDuration = selectedAnime.duration > 0 ? selectedAnime.duration * 60 : 24 * 60;
     ApiResponse<AniskipTimesEntity> aniskipResponse =
       await _httpService.get(
-          "${config.aniskiBaseEndpoint}/v2/skip-times/${selectedAnime.idMal}/${videoInfo.playlistIndex + 1}?types=op&types=ed&episodeLength=$formattedDuration",
+          "${config.aniskiBaseEndpoint}/v2/skip-times/${selectedAnime.idMal}/${episodeNumber.toInt()}?types=op&types=ed&episodeLength=$formattedDuration",
           fromJson: AniskipTimesEntity.fromJson
       );
+    if (isClosed || requestId != _aniskipRequestId || selectedAnime.idMal != state.selectedAnime.idMal) return;
     if (aniskipResponse.statusCode > 299 || aniskipResponse.data.statusCode > 299) {
     _logger.e("Failed to fetch Aniskip times for malId: ${selectedAnime.idMal}. Status code: ${aniskipResponse.data.statusCode}. Message: ${aniskipResponse.data.message}");
       return;
@@ -386,6 +394,9 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   Future<void> navigateToEpisode(int episodeIndex) async {
+    if (isClosed) return;
+    final requestId = ++_aniskipRequestId;
+    emit(state.copyWith(openingSkipTimes: AniskipTimesResults(), endingSkipTimes: AniskipTimesResults()));
     try {
       _logger.i("Navigating to episode index: $episodeIndex");
       _videoService.resetService();
@@ -394,13 +405,14 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         state.selectedExtension,
         state.extensionEpisodeResults[episodeIndex],
       );
+      if (isClosed || requestId != _aniskipRequestId) return;
       VideoInfo videoInfo = VideoInfoModel(
         currentVideo: alternativeVideos[currentVideoInfo.videoIndex],
         alternativeVideos: alternativeVideos,
         videoIndex: currentVideoInfo.videoIndex,
         playlistIndex: episodeIndex,
       );
-      await _selectNewEpisode(videoInfo);
+      await _selectNewEpisode(videoInfo, requestId);
     } catch (e, stackTrace) {
       logger.e("Error navigating to episode $e", stackTrace: stackTrace);
       handleError("Error navigating to episode", stackTrace: stackTrace);
