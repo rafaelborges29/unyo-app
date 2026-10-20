@@ -200,10 +200,18 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   }
 
   Future<shelf.Response> _handleLoginRequest(shelf.Request request) async {
+    if (request.method != 'GET' ||
+        request.requestedUri.path != Uri.parse(config.anilistRedirectUri).path) {
+      return shelf.Response.notFound('Not found');
+    }
+    final accessCodes = request.requestedUri.queryParametersAll['code'];
+    if (accessCodes == null || accessCodes.length != 1 || accessCodes.single.trim().isEmpty) {
+      return shelf.Response.badRequest(body: 'Expected one nonempty authorization code.');
+    }
+
     try {
       _logger.i("Handling login request from Anilist at ${request.requestedUri.path}");
-      String accessCode = request.requestedUri.queryParameters['code']!;
-      await _createUser(accessCode);
+      await _createUser(accessCodes.single);
       return shelf.Response.ok('Authorization successful. You can close this window.');
     } catch (e, stackTrace) {
       _logger.e("Error Handling login request: $e", stackTrace: stackTrace);
