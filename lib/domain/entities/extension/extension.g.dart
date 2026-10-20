@@ -26,13 +26,14 @@ class ExtensionModelAdapter extends TypeAdapter<ExtensionModel> {
       nsfw: (fields[6] as num).toInt(),
       type: fields[7] as String,
       repositoryUrl: fields[8] == null ? '' : fields[8] as String,
+      versionCode: (fields[9] as num?)?.toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, ExtensionModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class ExtensionModelAdapter extends TypeAdapter<ExtensionModel> {
       ..writeByte(7)
       ..write(obj.type)
       ..writeByte(8)
-      ..write(obj.repositoryUrl);
+      ..write(obj.repositoryUrl)
+      ..writeByte(9)
+      ..write(obj.versionCode);
   }
 
   @override
@@ -79,6 +82,7 @@ _ExtensionModel _$ExtensionModelFromJson(Map<String, dynamic> json) =>
       nsfw: (json['nsfw'] as num).toInt(),
       type: json['type'] as String,
       repositoryUrl: json['repositoryUrl'] as String? ?? "",
+      versionCode: (json['versionCode'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$ExtensionModelToJson(_ExtensionModel instance) =>
@@ -92,4 +96,5 @@ Map<String, dynamic> _$ExtensionModelToJson(_ExtensionModel instance) =>
       'nsfw': instance.nsfw,
       'type': instance.type,
       'repositoryUrl': instance.repositoryUrl,
+      'versionCode': instance.versionCode,
     };
