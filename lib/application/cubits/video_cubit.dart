@@ -262,7 +262,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     var messageIndex = 0;
     session.messageStream.listen((message) {
       messageIndex += 1;
-      _logger.d("Cast message received ($messageIndex): $message");
+      _logger.d("Cast message received ($messageIndex)");
 
       // After receiving the initial messages, send the media load command
       if (messageIndex == 2) {
@@ -288,7 +288,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     final contentType = _getContentType(video.videoUrl);
     final streamType = _getStreamType(video.videoUrl);
 
-    _logger.d("Casting video: ${video.videoUrl} with contentType: $contentType, streamType: $streamType");
+    _logger.d("Casting video with contentType: $contentType, streamType: $streamType");
 
     // Build the media message
     final Map<String, dynamic> message = {
@@ -310,7 +310,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     // For full header support, a custom receiver app may be needed.
     if (video.headers != null && video.headers!.headersMap.isNotEmpty) {
       final headers = video.headers!.headersMap;
-      _logger.d("Including custom headers for cast: $headers");
+      _logger.d("Including ${headers.length} custom headers for cast");
 
       // Add headers via customData (requires custom receiver support)
       message['customData'] = {'headers': headers};
