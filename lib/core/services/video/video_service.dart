@@ -453,8 +453,8 @@ class VideoService {
 
     if (newStatus.test(mdk.MediaStatus.loaded) && !_isVideoReady) {
       _initSubtitlesAndAudiotracks();
+      setVolume(volume);
       _player.state = mdk.PlaybackState.playing;
-      setVolume(1.0);
       _isVideoReady = true;
     }
     if (newStatus.test(mdk.MediaStatus.loaded) && _isVideoReady) {
