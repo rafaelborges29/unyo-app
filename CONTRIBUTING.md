@@ -363,14 +363,6 @@ After building, copy the JAR to `unyo_lib/assets/unyo-core.jar` so the Flutter a
 
 The torrent server (`libmtorrentserver`) lives in a separate Go module (`go/binding/desktop/`). It must be compiled per-platform as a c-shared library. The CI handles this during releases.
 
-The app bundles TorrServer MatriX.137 under `assets/services/torrserver/`. Its status JSON uses snake_case keys, and file IDs are one-based. Playback uses available `file_stats` even when the server reports `stat: 0`, preserves native file IDs during filename selection, and converts zero-based playlist positions to one-based IDs when metadata is absent.
-
-Torrent regression tests use `test/fixtures/torrent_added.json`, captured from the bundled Linux binary with a tiny local two-file torrent. Run them without external torrent content or native video playback:
-
-```sh
-flutter test test/domain/entities/torrent/torrent_status_test.dart test/core/services/video/torrent_file_selector_test.dart
-```
-
 ---
 
 ## Submitting Changes
