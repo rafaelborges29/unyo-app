@@ -245,8 +245,7 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
         "perPage": 50,
         "sort": sort.replaceAll("_ASC", ""),
         if (query.isNotEmpty) "search": query,
-        if (selectedGenres.isNotEmpty) 
-          "genres": selectedGenres.map((g) => g.toUpperCase().replaceAll(' ', '_')).toList(),
+        if (selectedGenres.isNotEmpty) "genres": selectedGenres,
         if (selectedAiringStatus != null && selectedAiringStatus.isNotEmpty)
           "status": selectedAiringStatus.toUpperCase().replaceAll(' ', '_'),
         if (selectedFormat != null && selectedFormat.isNotEmpty)
