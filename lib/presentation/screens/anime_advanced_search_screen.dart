@@ -66,7 +66,6 @@ class _AnimeAdvancedSearchViewState extends State<_AnimeAdvancedSearchView> {
             const SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
-              height: 50,
               child: Row(
                 children: [
                   const SizedBox(width: 5),
@@ -75,35 +74,32 @@ class _AnimeAdvancedSearchViewState extends State<_AnimeAdvancedSearchView> {
                     icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorScheme.of(context).tertiary),
                   ),
                   const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextHeadlineMedium(
-                            text: "Anime",
-                            style: TextStyle(
-                              color: ColorScheme.of(context).tertiary,
-                              fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          children: [
+                            TextHeadlineMedium(
+                              text: "Anime",
+                              style: TextStyle(
+                                color: ColorScheme.of(context).tertiary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const TextHeadlineMedium(
-                            text: " Advanced Search",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextBodyLarge(
-                            text: "Refine your anime search with advanced filters",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const TextHeadlineMedium(
+                              text: " Advanced Search",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const TextBodyLarge(
+                          text: "Refine your anime search with advanced filters",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

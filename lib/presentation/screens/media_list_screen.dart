@@ -66,7 +66,6 @@ class _MediaListViewState extends State<_MediaListView> with TickerProviderState
             const SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
-              height: 50,
               child: Row(
                 children: [
                   const SizedBox(width: 5),
@@ -75,33 +74,30 @@ class _MediaListViewState extends State<_MediaListView> with TickerProviderState
                     icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorScheme.of(context).tertiary),
                   ),
                   const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const TextHeadlineMedium(text: "Hi ", style: TextStyle(fontWeight: FontWeight.bold)),
-                          TextHeadlineMedium(
-                            text: "${state.loggedUser.name}! ",
-                            style: TextStyle(color: ColorScheme.of(context).tertiary, fontWeight: FontWeight.bold),
-                          ),
-                          TextHeadlineMedium(
-                            text: "Welcome to your ${widget.type == MediaType.anime ? "Anime" : "Manga"} Lists!",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextBodyLarge(
-                            text: "You can find and remember your favorite ${widget.type == MediaType.anime ? "anime" : "manga"} here",
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          children: [
+                            const TextHeadlineMedium(text: "Hi ", style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextHeadlineMedium(
+                              text: "${state.loggedUser.name}! ",
+                              style: TextStyle(color: ColorScheme.of(context).tertiary, fontWeight: FontWeight.bold),
+                            ),
+                            TextHeadlineMedium(
+                              text: "Welcome to your ${widget.type == MediaType.anime ? "Anime" : "Manga"} Lists!",
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        TextBodyLarge(
+                          text: "You can find and remember your favorite ${widget.type == MediaType.anime ? "anime" : "manga"} here",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -129,8 +125,7 @@ class _MediaListViewState extends State<_MediaListView> with TickerProviderState
                 ],
               ),
             ),
-            SizedBox(
-              height: 1.sh - 135,
+            Expanded(
               child: Padding(
                 padding: EdgeInsets.only(left: 15.0.w, right: 15.0.w, top: 15.0.h),
                 child: TabBarView(
