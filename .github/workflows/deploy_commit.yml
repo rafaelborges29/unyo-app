@@ -14,29 +14,44 @@ on:
 jobs:
   create-tag:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.create_tag.outputs.sha }}
+      tag_name: ${{ steps.create_tag.outputs.tag_name }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
       - name: Create Git Tag
         id: create_tag
         uses: actions/github-script@v6
+        env:
+          RELEASE_REF: ${{ github.event.inputs.ref }}
+          RELEASE_VERSION: ${{ github.event.inputs.version }}
         with:
           script: |
-            const tagName = `v${{ github.event.inputs.version }}`;
-            const { data: tag } = await github.rest.git.createRef({
+            const { data: commit } = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: process.env.RELEASE_REF,
+            });
+            const tagName = `v${process.env.RELEASE_VERSION}`;
+            await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
               ref: `refs/tags/${tagName}`,
-              sha: context.sha,
+              sha: commit.sha,
             });
-            return tag;;
+            core.setOutput('sha', commit.sha);
+            core.setOutput('tag_name', tagName);
 
   build-and-release-linux:
+    needs: create-tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.ref }}
+          ref: ${{ needs.create-tag.outputs.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -73,6 +88,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: build/linux/x64/release/bundle/Unyo-${{ github.event.inputs.version }}-linux.zip
       - name: Copy AppDir
         run: cp -r linux-appimage/Unyo.AppDir .
@@ -89,6 +105,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: /home/runner/work/Unyo/Unyo/Unyo-${{ github.event.inputs.version }}-linux.AppImage
       - name: Activate flutter_to_debian
         run: dart pub global activate flutter_to_debian
@@ -103,14 +120,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: build/linux/x64/release/debian/unyo-${{ github.event.inputs.version }}-linux.deb
 
   build-and-release-windows:
+    needs: create-tag
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.ref }}
+          ref: ${{ needs.create-tag.outputs.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -142,6 +163,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: build/windows/x64/runner/Release/Unyo-${{ github.event.inputs.version }}-windows.zip
       - name: Running installer build
         uses: Minionguyjpro/Inno-Setup-Action@v1.2.4
@@ -153,14 +175,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: build\windows\x64\runner\unyo-${{ github.event.inputs.version }}-windows-setup.exe
 
   build-and-release-macos:
+    needs: create-tag
     runs-on: macos-14
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.ref }}
+          ref: ${{ needs.create-tag.outputs.sha }}
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -193,6 +219,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: build/macos/Build/Products/Release/Unyo-${{ github.event.inputs.version }}-macos.zip
       - name: build macos
         run: |
@@ -206,4 +233,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          tag_name: ${{ needs.create-tag.outputs.tag_name }}
           files: /Users/runner/work/Unyo/Unyo/Unyo-${{ github.event.inputs.version }}-macos.dmg
