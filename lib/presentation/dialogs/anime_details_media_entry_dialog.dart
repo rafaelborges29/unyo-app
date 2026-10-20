@@ -8,15 +8,22 @@ import 'package:unyo/presentation/widgets/styled/light_unyo_button.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_dropdown.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_slider.dart';
 
-class AnimeDetailsMediaEntryDialog extends StatelessWidget {
+class AnimeDetailsMediaEntryDialog extends StatefulWidget {
   final AnimeDetailsCubit cubit;
 
   const AnimeDetailsMediaEntryDialog({super.key, required this.cubit});
 
   @override
+  State<AnimeDetailsMediaEntryDialog> createState() => _AnimeDetailsMediaEntryDialogState();
+}
+
+class _AnimeDetailsMediaEntryDialogState extends State<AnimeDetailsMediaEntryDialog> {
+  final _progressFormKey = GlobalKey<FormState>();
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: cubit,
+      value: widget.cubit,
       child: BlocBuilder<AnimeDetailsCubit, AnimeDetailsState>(
         builder:
             (context, state) => Dialog(
@@ -60,14 +67,24 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                             selectedValue: state.newMediaListEntry.status,
                           ),
                           SizedBox(height: 25.0.h),
-                        UnyoSlider(
-                            minValue: 0,
-                            initialValue: state.newMediaListEntry.progress != -1 ? state.newMediaListEntry.progress : 0,
-                            title: "Progress",
-                            maxValue: state.selectedAnime.episodes,
-                            onChanged:
-                                (value) =>
-                                context.read<AnimeDetailsCubit>().updateMediaListEntryProgress(value.toInt()),
+                          Form(
+                            key: _progressFormKey,
+                            child: TextFormField(
+                              initialValue: (state.newMediaListEntry.progress != -1 ? state.newMediaListEntry.progress : 0).toString(),
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: "Progress",
+                                helperText: state.selectedAnime.episodes > 0
+                                    ? "Total episodes: ${state.selectedAnime.episodes}"
+                                    : "Total episodes unknown",
+                              ),
+                              autovalidateMode: AutovalidateMode.onUserInteraction,
+                              validator: (value) {
+                                final progress = int.tryParse(value ?? "");
+                                return progress == null || progress < 0 ? "Enter a nonnegative whole number" : null;
+                              },
+                              onSaved: (value) => context.read<AnimeDetailsCubit>().updateMediaListEntryProgress(int.parse(value!)),
+                            ),
                           ),
                           SizedBox(height: 25.0.h),
                           UnyoSlider(
@@ -131,7 +148,15 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                             children: [
                               DarkUnyoButton(text: "Cancel", maxHeight: 50, onPressed: () => context.read<AnimeDetailsCubit>().popRouteEffect(context)),
                               SizedBox(width: 25.0.w),
-                              LightUnyoButton(text: "Confirm", maxHeight: 50, onPressed: () => context.read<AnimeDetailsCubit>().updateMediaListEntry(context)),
+                              LightUnyoButton(
+                                text: "Confirm",
+                                maxHeight: 50,
+                                onPressed: () {
+                                  if (!_progressFormKey.currentState!.validate()) return;
+                                  _progressFormKey.currentState!.save();
+                                  context.read<AnimeDetailsCubit>().updateMediaListEntry(context);
+                                },
+                              ),
                             ],
                           )
                         ],
