@@ -77,7 +77,10 @@ class MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia {
 	late int averageScore = 0;
 	late MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMediaTitle title;
 
-	MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia();
+	MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia() {
+		endDate = MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMediaEndDate();
+		startDate = MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMediaStartDate();
+	}
 
 	factory MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia.fromJson(Map<String, dynamic> json) => $MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMediaFromJson(json);
 

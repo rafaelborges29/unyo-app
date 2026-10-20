@@ -61,7 +61,10 @@ class MediaCollectionUpcomingGraphqlDtoPageMedia {
 	late int averageScore = 0;
 	late MediaCollectionUpcomingGraphqlDtoPageMediaTitle title;
 
-	MediaCollectionUpcomingGraphqlDtoPageMedia();
+	MediaCollectionUpcomingGraphqlDtoPageMedia() {
+		endDate = MediaCollectionUpcomingGraphqlDtoPageMediaEndDate();
+		startDate = MediaCollectionUpcomingGraphqlDtoPageMediaStartDate();
+	}
 
 	factory MediaCollectionUpcomingGraphqlDtoPageMedia.fromJson(Map<String, dynamic> json) => $MediaCollectionUpcomingGraphqlDtoPageMediaFromJson(json);
 

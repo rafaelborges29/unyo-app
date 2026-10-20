@@ -222,7 +222,9 @@ class MediaDetailsGraphqlMediaCharactersNodes {
 	late MediaDetailsGraphqlMediaCharactersNodesDateOfBirth dateOfBirth;
 	String age = '';
 
-	MediaDetailsGraphqlMediaCharactersNodes();
+	MediaDetailsGraphqlMediaCharactersNodes() {
+		dateOfBirth = MediaDetailsGraphqlMediaCharactersNodesDateOfBirth();
+	}
 
 	factory MediaDetailsGraphqlMediaCharactersNodes.fromJson(Map<String, dynamic> json) => $MediaDetailsGraphqlMediaCharactersNodesFromJson(json);
 
