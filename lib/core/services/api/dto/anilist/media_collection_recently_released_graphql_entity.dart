@@ -38,6 +38,8 @@ class MediaCollectionRecentlyReleasedGraphqlDtoPage {
 
 @JsonSerializable()
 class MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules {
+	late int episode = 0;
+	late int airingAt = 0;
 	late MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia media;
 
 	MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules();

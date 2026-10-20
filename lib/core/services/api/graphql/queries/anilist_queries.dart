@@ -321,6 +321,8 @@ const calendarQuery =
 query Page(\$sort: [AiringSort], \$page: Int, \$perPage: Int, \$airingAtGreater: Int, \$airingAtLesser: Int) {
   Page(page: \$page, perPage: \$perPage) {
     airingSchedules(sort: \$sort, airingAt_greater: \$airingAtGreater, airingAt_lesser: \$airingAtLesser) {
+      episode
+      airingAt
       media {
         nextAiringEpisode {
           episode

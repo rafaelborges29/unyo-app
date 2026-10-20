@@ -62,6 +62,16 @@ extension MediaCollectionRecentlyReleasedGraphqlDtoPageExtension on MediaCollect
 MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules $MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesFromJson(
     Map<String, dynamic> json) {
   final MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules mediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules = MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules();
+  final int? episode = jsonConvert.convert<int>(json['episode']);
+  if (episode != null) {
+    mediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules.episode =
+        episode;
+  }
+  final int? airingAt = jsonConvert.convert<int>(json['airingAt']);
+  if (airingAt != null) {
+    mediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules.airingAt =
+        airingAt;
+  }
   final MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia? media = jsonConvert.convert<
       MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia>(json['media']);
   if (media != null) {
@@ -73,15 +83,21 @@ MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules $MediaCollectionRec
 Map<String, dynamic> $MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesToJson(
     MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules entity) {
   final Map<String, dynamic> data = <String, dynamic>{};
+  data['episode'] = entity.episode;
+  data['airingAt'] = entity.airingAt;
   data['media'] = entity.media.toJson();
   return data;
 }
 
 extension MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesExtension on MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules {
   MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules copyWith({
+    int? episode,
+    int? airingAt,
     MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedulesMedia? media,
   }) {
     return MediaCollectionRecentlyReleasedGraphqlDtoPageAiringSchedules()
+      ..episode = episode ?? this.episode
+      ..airingAt = airingAt ?? this.airingAt
       ..media = media ?? this.media;
   }
 }

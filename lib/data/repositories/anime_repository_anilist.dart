@@ -24,6 +24,7 @@ import 'package:unyo/data/models/anilist/media/anilist_anime_model.dart';
 import 'package:unyo/data/models/anilist/user/anilist_user_model.dart';
 import 'package:unyo/data/repositories/repository_mixin.dart';
 import 'package:unyo/domain/entities/media/anime.dart';
+import 'package:unyo/domain/entities/media/airing_episode.dart';
 import 'package:unyo/domain/entities/media/anime_details.dart';
 import 'package:unyo/domain/entities/list/media_list_entry.dart';
 import 'package:unyo/domain/entities/user/user.dart';
@@ -391,7 +392,12 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
         );
     throwIfGraphQlError(airingSchedules);
     return airingSchedules.data.page.airingSchedules
-        .map((schedule) => AnilistAnimeModel.fromScheduleEntry(schedule))
+        .map((schedule) => AnilistAnimeModel.fromScheduleEntry(schedule).copyWith(
+          nextAiringEpisode: AiringEpisodeModel(
+            episode: schedule.episode,
+            airingAt: schedule.airingAt.toString(),
+          ),
+        ))
         .toList();
   }
 
