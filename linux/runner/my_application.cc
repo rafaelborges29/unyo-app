@@ -17,6 +17,7 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+  g_autoptr(FlDartProject) project = fl_dart_project_new();
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
@@ -40,7 +41,12 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_window_set_icon_from_file(GTK_WINDOW(window),"assets/images/logo_1.png",NULL);
+    g_autofree gchar* icon_path = g_build_filename(
+        fl_dart_project_get_assets_path(project), "assets", "logo_1.png", nullptr);
+    g_autoptr(GError) error = nullptr;
+    if (!gtk_window_set_icon_from_file(window, icon_path, &error)) {
+      g_warning("Failed to load window icon: %s", error->message);
+    }
     gtk_header_bar_set_title(header_bar, "unyo");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
@@ -51,7 +57,6 @@ static void my_application_activate(GApplication* application) {
   gtk_window_set_default_size(window, 1280, 720);
   gtk_widget_show(GTK_WIDGET(window));
 
-  g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);
