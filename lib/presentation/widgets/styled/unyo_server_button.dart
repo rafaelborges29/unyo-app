@@ -42,12 +42,6 @@ class UnyoServerButton extends StatelessWidget {
                                 : Icons.sd,
                             color: ColorScheme.of(context).tertiary,
                           ),
-                          IconButton(
-                            onPressed: () {},
-                            color: ColorScheme.of(context).tertiary,
-                            iconSize: 22,
-                            icon: const Icon(Icons.star_border_rounded),
-                          ),
                         ],
                       ),
                     ],

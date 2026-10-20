@@ -68,7 +68,7 @@ class _UnyoSettingsCategoryState extends State<UnyoSettingsCategory> with Single
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         InkWell(
-          onTap: _toggleExpanded,
+          onTap: widget.settingsOptions.isEmpty ? null : _toggleExpanded,
           child: Container(
             width: double.infinity,
             height: 75,
@@ -119,11 +119,12 @@ class _UnyoSettingsCategoryState extends State<UnyoSettingsCategory> with Single
                       ),
                     ],
                   ),
-                  AnimatedRotation(
-                    turns: _isExpanded ? 0.75 : 0.50,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(Icons.arrow_back_ios_new_rounded),
-                  ),
+                  if (widget.settingsOptions.isNotEmpty)
+                    AnimatedRotation(
+                      turns: _isExpanded ? 0.75 : 0.50,
+                      duration: const Duration(milliseconds: 200),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded),
+                    ),
                 ],
               ),
             ),

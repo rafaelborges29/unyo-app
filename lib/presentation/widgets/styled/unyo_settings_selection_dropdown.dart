@@ -10,7 +10,7 @@ class UnyoSettingsSelectionDropdown extends StatefulWidget {
   final String? label;
   final String defaultValue;
   final List<String> children;
-  final void Function(String?) onPressed;
+  final void Function(String?)? onPressed;
 
   const UnyoSettingsSelectionDropdown({
     super.key,
@@ -97,9 +97,7 @@ class _UnyoSettingsSelectionDropdownState extends State<UnyoSettingsSelectionDro
                 children: widget.children,
                 label: widget.label,
                 selectedValue: widget.defaultValue,
-                onPressed: (value) {
-                  widget.onPressed(value);
-                },
+                onPressed: widget.onPressed,
               ),
             ),
           ],

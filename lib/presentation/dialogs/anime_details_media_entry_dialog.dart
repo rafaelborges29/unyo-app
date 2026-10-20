@@ -39,7 +39,8 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                                 style: TextStyle(fontSize: 23, fontWeight: FontWeight.w800),
                               ),
                               IconButton(
-                                onPressed: () {},
+                                onPressed: null,
+                                tooltip: "Removing list entries is not available yet",
                                 icon: const Icon(Icons.delete),
                                 style: const ButtonStyle(fixedSize: WidgetStatePropertyAll(Size(12.0, 12.0))),
                               ),

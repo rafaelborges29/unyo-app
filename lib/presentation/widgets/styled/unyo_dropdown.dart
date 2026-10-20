@@ -57,6 +57,7 @@ class _UnyoDropdownState extends State<UnyoDropdown> {
     return LayoutBuilder(
       builder:
           (context, constrains) => DropdownMenu<String?>(
+            enabled: widget.onPressed != null,
             width: widget.width ?? constrains.maxWidth,
             controller: searchController,
             onSelected: widget.onPressed,
@@ -68,7 +69,10 @@ class _UnyoDropdownState extends State<UnyoDropdown> {
               ),
             ),
             trailingIcon:
-                widget.selectedValue == null || widget.selectedValue!.isEmpty || searchController.text.isEmpty
+                widget.onPressed == null ||
+                        widget.selectedValue == null ||
+                        widget.selectedValue!.isEmpty ||
+                        searchController.text.isEmpty
                     ? Icon(Icons.arrow_drop_down, color: ColorScheme.of(context).tertiary.withValues(alpha: 0.7))
                     : GestureDetector(
                       onTap: () {

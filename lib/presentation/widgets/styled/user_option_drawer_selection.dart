@@ -6,7 +6,7 @@ class UserOptionDrawerSelection extends StatelessWidget {
 
   final String text;
   final IconData icon;
-  final void Function() onPressed;
+  final void Function()? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -25,14 +25,14 @@ class UserOptionDrawerSelection extends StatelessWidget {
             SizedBox(width: 20.w,),
             Icon (
               icon,
-              color: Colors.white,
+              color: onPressed == null ? Colors.grey : Colors.white,
               size: 22,
             ),
             SizedBox(width: 10.w,),
             Text(
               text,
-              style: const TextStyle(
-                  color: Colors.white,
+              style: TextStyle(
+                  color: onPressed == null ? Colors.grey : Colors.white,
                   fontSize: 14,
                   fontWeight: FontWeight.w500
               ),

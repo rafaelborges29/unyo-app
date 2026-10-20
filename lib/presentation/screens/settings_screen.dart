@@ -113,45 +113,11 @@ class _SettingsViewState extends State<_SettingsView> with TickerProviderStateMi
                   children: [
                     const UnyoSettingsCategory(
                       title: "Accounts",
-                      description: "Manage your connected accounts",
+                      description: "Account settings are not available yet",
                       icon: Icons.person_rounded,
                       alignment: "top",
                       childAlignment: "center",
-                      settingsOptions: [
-                        UnyoSettingsCategory(
-                          title: "Anilist",
-                          description: "Manage your Anilist connected accounts",
-                          icon: Icons.format_list_bulleted_rounded,
-                          alignment: "",
-                          childAlignment: "",
-                          isChild: true,
-                          settingsOptions: [
-                            // TODO - Anilist account settings go here
-                          ],
-                        ),
-                        UnyoSettingsCategory(
-                          title: "MyAnimeList",
-                          description: "Manage your MyAnimeList connected accounts",
-                          icon: Icons.format_list_bulleted_rounded,
-                          alignment: "",
-                          childAlignment: "",
-                          isChild: true,
-                          settingsOptions: [
-                            // TODO - MyAnimeList account settings go here
-                          ],
-                        ),
-                        UnyoSettingsCategory(
-                          title: "Shikimori",
-                          description: "Manage your Shikimori connected accounts",
-                          icon: Icons.format_list_bulleted_rounded,
-                          alignment: "",
-                          childAlignment: "",
-                          isChild: true,
-                          settingsOptions: [
-                            // TODO - Shikimori account settings go here
-                          ],
-                        ),
-                      ],
+                      settingsOptions: [],
                     ),
                     UnyoSettingsCategory(
                       title: "Common",
@@ -198,14 +164,14 @@ class _SettingsViewState extends State<_SettingsView> with TickerProviderStateMi
                           childAlignment: "",
                           isChild: true,
                           settingsOptions: [
-                            UnyoSettingsSelectionDropdown(
+                            const UnyoSettingsSelectionDropdown(
                               title: "Language",
-                              description: "Select the application language",
+                              description: "Only English is currently available",
                               icon: Icons.language_rounded,
                               label: "Select a language",
                               defaultValue: "English",
                               children: ["English"],
-                              onPressed: (value) {},
+                              onPressed: null,
                             ),
                             UnyoSettingsSelectionDropdown(
                               title: "Default Media Title Language",
@@ -313,7 +279,7 @@ class _SettingsViewState extends State<_SettingsView> with TickerProviderStateMi
                     ),
                     const UnyoSettingsCategory(
                       title: "Reader",
-                      description: "Manga reader settings",
+                      description: "Reader settings are not available yet",
                       icon: Icons.my_library_books_rounded,
                       alignment: "",
                       childAlignment: "",
@@ -340,10 +306,9 @@ class _SettingsViewState extends State<_SettingsView> with TickerProviderStateMi
                         ),
                       ],
                     ),
-                    // Probably have a custom widget here with my information and a link to my social media and ko-fi
                     const UnyoSettingsCategory(
                       title: "About",
-                      description: "About the app",
+                      description: "About information is not available yet",
                       icon: Icons.info_rounded,
                       alignment: "bottom",
                       childAlignment: "bottom",

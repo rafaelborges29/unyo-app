@@ -85,10 +85,13 @@ class _UserOptionsDrawerState extends State<UserOptionsDrawer> {
                     ],
                   ),
                   SizedBox(height: 35.h),
-                  UserOptionDrawerSelection(
+                  const Tooltip(
+                    message: "Profile viewing is not available yet",
+                    child: UserOptionDrawerSelection(
                       text: "View Profile",
                       icon: Icons.person_rounded,
-                      onPressed: () {}
+                      onPressed: null,
+                    ),
                   ),
                   SizedBox(height: 10.h),
                   UserOptionDrawerSelection(
