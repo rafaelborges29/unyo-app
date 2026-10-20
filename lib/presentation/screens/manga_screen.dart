@@ -92,15 +92,13 @@ class _MangaViewState extends State<_MangaView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    MediaButton(
-                      onPressed: () {},
-                      image:
-                          state.banners.isNotEmpty
-                              ? state
-                                  .banners[0]
-                                  .bannerImage
-                              : "",
-                      text: "Calendar",
+                    Tooltip(
+                      message: "The manga calendar is not available yet",
+                      child: MediaButton(
+                        onPressed: null,
+                        image: state.banners.isNotEmpty ? state.banners[0].bannerImage : "",
+                        text: "Calendar",
+                      ),
                     ),
                     const SizedBox(width: 30),
                     MediaButton(

@@ -18,10 +18,14 @@ class MediaButton extends StatelessWidget {
               duration: const Duration(milliseconds: 130),
               alignment: Alignment.center,
               width: width.w.clamp(width - 50, width + 10),
-              hoverWidth: (width + 10).w.clamp(width - 40, width + 20),
+              hoverWidth: onPressed == null
+                  ? width.w.clamp(width - 50, width + 10)
+                  : (width + 10).w.clamp(width - 40, width + 20),
               height: height.h.clamp(height - 10, height + 10),
-              hoverHeight: (height + 5).h.clamp(height - 5, height + 15),
-              hoverCursor: SystemMouseCursors.click,
+              hoverHeight: onPressed == null
+                  ? height.h.clamp(height - 10, height + 10)
+                  : (height + 5).h.clamp(height - 5, height + 15),
+              hoverCursor: onPressed == null ? SystemMouseCursors.basic : SystemMouseCursors.click,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [Colors.transparent, Colors.black87],
@@ -52,8 +56,10 @@ class MediaButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 image: DecorationImage(
                   opacity: 0.35,
-                  colorFilter:
-                      ColorFilter.mode(ColorScheme.of(context).primary, BlendMode.modulate),
+                  colorFilter: ColorFilter.mode(
+                    onPressed == null ? ColorScheme.of(context).secondary : ColorScheme.of(context).primary,
+                    BlendMode.modulate,
+                  ),
                   image: NetworkImage(
                     image,
                   ),
@@ -65,10 +71,10 @@ class MediaButton extends StatelessWidget {
                 children: [
                   Text(
                     text,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: onPressed == null ? Colors.grey : Colors.white,
                     ),
                   ),
                   Container(
