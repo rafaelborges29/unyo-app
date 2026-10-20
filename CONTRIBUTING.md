@@ -167,6 +167,14 @@ flutter build linux --release
 flutter test
 ```
 
+The detail-selection regression tests use controlled repository futures to check
+that late responses cannot replace the current title's entry, recommendations,
+episodes, or image, or enable saving before its entry loads:
+
+```sh
+flutter test test/application/cubits/media_details_cubit_test.dart
+```
+
 ### Static Analysis
 
 ```sh
