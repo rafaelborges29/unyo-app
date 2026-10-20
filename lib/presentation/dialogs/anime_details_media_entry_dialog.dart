@@ -8,15 +8,23 @@ import 'package:unyo/presentation/widgets/styled/light_unyo_button.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_dropdown.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_slider.dart';
 
-class AnimeDetailsMediaEntryDialog extends StatelessWidget {
+class AnimeDetailsMediaEntryDialog extends StatefulWidget {
   final AnimeDetailsCubit cubit;
 
   const AnimeDetailsMediaEntryDialog({super.key, required this.cubit});
 
   @override
+  State<AnimeDetailsMediaEntryDialog> createState() => _AnimeDetailsMediaEntryDialogState();
+}
+
+class _AnimeDetailsMediaEntryDialogState extends State<AnimeDetailsMediaEntryDialog> {
+  bool _saveFailed = false;
+  bool _isSaving = false;
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: cubit,
+      value: widget.cubit,
       child: BlocBuilder<AnimeDetailsCubit, AnimeDetailsState>(
         builder:
             (context, state) => Dialog(
@@ -126,12 +134,33 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                       ),
                       Column(
                         children: [
+                          if (_saveFailed)
+                            Padding(
+                              padding: EdgeInsets.only(bottom: 12.0.h),
+                              child: Text(
+                                "Changes were not saved. Retry to save your edits.",
+                                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                              ),
+                            ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               DarkUnyoButton(text: "Cancel", maxHeight: 50, onPressed: () => context.read<AnimeDetailsCubit>().popRouteEffect(context)),
                               SizedBox(width: 25.0.w),
-                              LightUnyoButton(text: "Confirm", maxHeight: 50, onPressed: () => context.read<AnimeDetailsCubit>().updateMediaListEntry(context)),
+                              LightUnyoButton(
+                                text: _isSaving ? "Saving..." : (_saveFailed ? "Retry" : "Confirm"),
+                                maxHeight: 50,
+                                isEnabled: !_isSaving,
+                                onPressed: () async {
+                                  setState(() => _isSaving = true);
+                                  final saved = await context.read<AnimeDetailsCubit>().updateMediaListEntry(context);
+                                  if (!mounted) return;
+                                  setState(() {
+                                    _isSaving = false;
+                                    _saveFailed = !saved;
+                                  });
+                                },
+                              ),
                             ],
                           )
                         ],
