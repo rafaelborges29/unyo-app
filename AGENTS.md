@@ -27,7 +27,7 @@ flutter analyze
 - **DI**: `get_it` via `lib/core/di/locator.dart`
 - **Codegen tools**: `freezed`, `json_serializable`, `hive_ce_generator`, `auto_route`, `auto_route_generator`
 - **Key generated files**: `*.g.dart` (Hive, Freezed, JSON), `lib/generated/json/*.g.dart`, `lib/hive_registrar.g.dart`
-- **External Go binding**: The torrent server (`libmtorrentserver`) is built from `go/binding/desktop/` — cloned separately; must be compiled per-platform as a c-shared library
+- **Torrent server**: Platform-specific TorrServer executables are bundled from `assets/services/torrserver/` via `pubspec.yaml` and launched by `TorrentService`; no Go build is required.
 
 ## Dependencies
 
@@ -40,4 +40,4 @@ Pinned to **3.38.1** (see `.fvmrc`). Use `fvm flutter` if managing multiple vers
 
 ## Release Process
 
-Releases are triggered by **git tags**. The CI workflow (`main.yml`) builds Go bindings for all three platforms, then runs the Flutter build. Do not manually edit generated `.g.dart` files before a release tag.
+Releases are triggered by **git tags**. The CI workflow (`main.yml`) runs the Flutter build for all three desktop platforms, including the bundled TorrServer assets. Do not manually edit generated `.g.dart` files before a release tag.
