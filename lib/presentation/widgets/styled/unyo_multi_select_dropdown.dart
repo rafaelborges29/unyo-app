@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class UnyoMultiSelectDropdown extends StatefulWidget {
@@ -39,12 +40,13 @@ class _UnyoMultiSelectDropdownState extends State<UnyoMultiSelectDropdown> {
 
   @override
   void didUpdateWidget(covariant UnyoMultiSelectDropdown oldWidget) {
-    if (oldWidget.selectedValues != _selectedItems ) {
-      setState(() {
-      _selectedItems = List.from(widget.selectedValues);
-      });
-    }
     super.didUpdateWidget(oldWidget);
+    if (!listEquals(oldWidget.selectedValues, widget.selectedValues)) {
+      setState(() {
+        _selectedItems = List.from(widget.selectedValues);
+      });
+      _overlayEntry?.markNeedsBuild();
+    }
   }
 
   @override
