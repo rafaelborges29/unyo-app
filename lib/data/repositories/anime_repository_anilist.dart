@@ -344,7 +344,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
           fromJson: MediaAdvancedSearchQueryGraphqlEntity.fromJson,
           variables: {
             "type": "ANIME",
-            "page": 1,
+            "page": page,
             "perPage": 50,
             "sort": sort.replaceAll("_ASC", ""),
             if (query.isNotEmpty) "search": query,
