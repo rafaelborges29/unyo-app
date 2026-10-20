@@ -231,6 +231,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   void openAnimeDetailsMediaEntryDialog(BuildContext context) {
+    emit(state.copyWith(newMediaListEntry: state.mediaListEntry));
     showWidgetDialogEffect(dialog: AnimeDetailsMediaEntryDialog(cubit: this));
   }
 
@@ -278,11 +279,12 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     MediaListEntry beforeUpdateMediaListEntry = state.mediaListEntry;
     try {
       _logger.i("Updating Media List Entry to $desiredMediaListEntry");
-      await _animeRepository.updateMediaListEntry(
+      MediaListEntry savedMediaListEntry = await _animeRepository.updateMediaListEntry(
         desiredMediaListEntry,
         state.selectedAnime,
         state.loggedUser,
       );
+      emit(state.copyWith(mediaListEntry: savedMediaListEntry));
       _reloadNotifier.emitReload(ReloadType.animeMediaListEntryUpdated);
       if (desiredMediaListEntry.status != beforeUpdateMediaListEntry.status) {
         _reloadNotifier.emitReload(ReloadType.homeMediaListEntryUpdated);
@@ -424,7 +426,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         loggedUser,
         ignoreCache: ignoreCache,
       );
-      emit(state.copyWith(mediaListEntry: mediaListEntry, newMediaListEntry: mediaListEntry));
+      emit(state.copyWith(mediaListEntry: mediaListEntry));
       _mediaListEntryNotifier.updateSelectedMediaListEntry(mediaListEntry);
     } on HttpServerException catch (e, stackTrace) {
       handleError("Error fetching User Media List entry:", responseBody: e.message, stackTrace: stackTrace);
@@ -444,7 +446,6 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         state.copyWith(
           characters: (animeDetails.$2.characters.isNotEmpty, animeDetails.$2.characters),
           mediaListEntry: animeDetails.$2.mediaListEntry,
-          newMediaListEntry: animeDetails.$2.mediaListEntry,
           recommendations: (
             animeDetails.$2.recommendedAnimes.isNotEmpty,
             animeDetails.$2.recommendedAnimes,
