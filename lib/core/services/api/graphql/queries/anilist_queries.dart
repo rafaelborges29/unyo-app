@@ -446,24 +446,6 @@ query Page(\$type: MediaType, \$mediaId: Int, \$page: Int, \$perPage: Int) {
         age
       }
     }
-    mediaListEntry {
-      progress
-      score
-      repeat
-      status
-      startedAt {
-        day
-        month
-        year
-      }
-      completedAt {
-        day
-        month
-        year
-      }
-      customLists(asArray: true)
-      progressVolumes
-    }
   }
 }
 ''';
