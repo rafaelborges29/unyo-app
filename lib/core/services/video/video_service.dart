@@ -37,8 +37,8 @@ class VideoService {
   ext.Track? _currentSubtitleTrack;
   ext.Track? _currentAudioTrack;
 
-  late bool _initialFullscreen;
-  late bool _isFullscreen;
+  bool? _initialFullscreen;
+  bool _isFullscreen = false;
   bool _isVideoReady = false;
   bool _isBuffering = true;
   bool _isLoading = false;
@@ -67,18 +67,26 @@ class VideoService {
 
   /// Inits asynchronous properties and sets player media
   Future<void> _initAsync() async {
-    _initialFullscreen = await windowManager.isFullScreen();
-    _isFullscreen = _initialFullscreen;
-    _player.onMediaStatus(_onMediaStatusInit);
     try {
+      final initialFullscreen = await windowManager.isFullScreen();
+      if (_isDisposed) return;
+      _initialFullscreen = initialFullscreen;
+      _isFullscreen = initialFullscreen;
+      _player.onMediaStatus(_onMediaStatusInit);
       final resolvedUrl = await _resolveVideoUrl(_video.videoUrl);
+      if (_isDisposed) {
+        _attemptDisposeTorrent();
+        return;
+      }
       _player.media = resolvedUrl;
       await _player.prepare();
+      if (_isDisposed) return;
+      _player.loop = 0;
     } catch (e, st) {
+      if (_isDisposed) return;
       _logger.e("Failed to resolve video URL in _initAsync", error: e, stackTrace: st);
       _onErrorCallback(e.toString());
     }
-    _player.loop = 0;
   }
 
   Future<void> changeVideo({
@@ -280,9 +288,15 @@ class VideoService {
   }
 
   void dispose() {
+    if (_isDisposed) return;
     _isDisposed = true;
     _player.onMediaStatus(null);
-    setFullscreen(_initialFullscreen);
+    final initialFullscreen = _initialFullscreen;
+    if (initialFullscreen != null) {
+      windowManager.setFullScreen(initialFullscreen).catchError((Object e, StackTrace st) {
+        _logger.e("Failed to restore fullscreen", error: e, stackTrace: st);
+      });
+    }
     _player.dispose();
     _attemptDisposeTorrent();
   }
