@@ -83,6 +83,7 @@ class _MangaViewState extends State<_MangaView> {
             children: [
               SizedBox(height: 20.0.h),
               UnyoBannerCarousel(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 mangaList: state.banners,
                 onTapManga: context.read<MangaCubit>().navigateToMangaDetails,
               ),
@@ -119,6 +120,7 @@ class _MangaViewState extends State<_MangaView> {
               const SizedBox(height: 40),
               state.trending.$1
                   ? MangaCardList(
+                    titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                     listTitle: "Trending Mangas",
                     mangaList: state.trending.$2,
                     controller: trendingController,
@@ -129,6 +131,7 @@ class _MangaViewState extends State<_MangaView> {
               const SizedBox(height: 30),
               state.recentlyCompleted.$1
                   ? MangaCardList(
+                    titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                     listTitle: "Recently Completed Mangas",
                     mangaList: state.recentlyCompleted.$2,
                     controller: recentlyCompletedController,
@@ -139,6 +142,7 @@ class _MangaViewState extends State<_MangaView> {
               const SizedBox(height: 30),
               state.popular.$1
                   ? MangaCardList(
+                    titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                     listTitle: "Popular Mangas",
                     mangaList: state.popular.$2,
                     controller: popularController,
@@ -149,6 +153,7 @@ class _MangaViewState extends State<_MangaView> {
               const SizedBox(height: 30),
               state.upcoming.$1
                   ? MangaCardList(
+                    titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                     listTitle: "Upcoming Mangas",
                     mangaList: state.upcoming.$2,
                     controller: upcomingController,

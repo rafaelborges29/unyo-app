@@ -10,6 +10,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:unyo/application/cubits/video_cubit.dart';
 import 'package:unyo/application/states/video_state.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_episode_button.dart';
+import 'package:unyo/presentation/widgets/text/text_utils.dart';
 
 class EpisodeListDrawer extends StatelessWidget {
   final VideoCubit cubit;
@@ -39,9 +40,7 @@ class EpisodeListDrawer extends StatelessWidget {
         UnyoEpisodeButton(
           mainTitle: "Episode ${i + 1}",
           secondaryTitle: state.episodesInfo.length > i
-              ? (state.episodesInfo[i].title.userPreferred != ""
-                    ? state.episodesInfo[i].title.userPreferred
-                    : "")
+              ? TextUtils.resolveTitle(state.episodesInfo[i].title, state.loggedUser.settings.episodeTitleLanguage)
               : "",
           episodeImageUrl: state.episodesInfo.length > i
               ? (state.episodesInfo[i].image != ""

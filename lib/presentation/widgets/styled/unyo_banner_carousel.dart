@@ -10,12 +10,13 @@ import 'package:unyo/presentation/widgets/text/text_utils.dart';
 import 'package:unyo/presentation/widgets/text/texts.dart';
 
 class UnyoBannerCarousel extends StatefulWidget {
+  final String titleLanguage;
   final List<Anime>? animeList;
   final List<Manga>? mangaList;
   final void Function(Anime, MediaList)? onTapAnime;
   final void Function(Manga, MediaList)? onTapManga;
 
-  const UnyoBannerCarousel({super.key, this.animeList, this.mangaList, this.onTapAnime, this.onTapManga});
+  const UnyoBannerCarousel({super.key, required this.titleLanguage, this.animeList, this.mangaList, this.onTapAnime, this.onTapManga});
 
   @override
   State<UnyoBannerCarousel> createState() => _UnyoBannerCarouselState();
@@ -175,11 +176,7 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
                                   children: [
                                     TextTitleSmall(
                                       text:
-                                          widget
-                                              .animeList?[_currentPage]
-                                              .title
-                                              .userPreferred ??
-                                          widget.mangaList![_currentPage].title.userPreferred,
+                                          TextUtils.resolveTitle(widget.animeList?[_currentPage].title ?? widget.mangaList![_currentPage].title, widget.titleLanguage),
                                       style: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     Container(

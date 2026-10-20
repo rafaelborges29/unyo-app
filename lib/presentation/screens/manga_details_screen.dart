@@ -90,7 +90,7 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
       episodeButtons.add(
         UnyoEpisodeButton(
           mainTitle: "Chapter ${i + 1}",
-          secondaryTitle: "${state.selectedManga.title.userPreferred} Chapter ${i + 1}",
+          secondaryTitle: "${TextUtils.resolveTitle(state.selectedManga.title, state.loggedUser.settings.mediaTitleLanguage)} Chapter ${i + 1}",
           episodeImageUrl: state.selectedManga.bannerImage != "" ? state.selectedManga.bannerImage : state.selectedManga.coverImage,
           episodeNumber: i + 1,
           progress: state.mediaListEntry.progress,
@@ -147,7 +147,7 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
                                   state.selectedManga.coverImage != ""
                                       ? state.selectedManga.coverImage
                                       : state.alternateImage,
-                                  title: state.selectedManga.title.userPreferred,
+                                  title: TextUtils.resolveTitle(state.selectedManga.title, state.loggedUser.settings.mediaTitleLanguage),
                                   status: state.selectedManga.status,
                                   tag: "${state.selectedMediaList.name}-${state.selectedManga.id}",
                                 ),
@@ -243,6 +243,7 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
                                 SizedBox(height: 20.h),
                                 state.recommendations.$1
                                     ? MangaRecommendationCardList(
+                                  titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                                   onPressed: context.read<MangaDetailsCubit>().navigateToMangaDetails,
                                   listTitle: "Recommended Mangas",
                                   mangaList: state.recommendations.$2,
