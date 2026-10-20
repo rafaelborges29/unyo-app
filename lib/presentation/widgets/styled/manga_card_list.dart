@@ -61,27 +61,27 @@ class MangaCardList extends StatelessWidget {
         SizedBox(
           height: 260,
           width: 1.sw - 140,
-          child: ListView(
+          child: ListView.builder(
             scrollDirection: Axis.horizontal,
             controller: controller,
-            children: [
-              ...mangaList.map(
-                    (manga) => MediaCard(
-                  title: manga.title.userPreferred,
-                  score: manga.averageScore,
-                  coverImage: manga.coverImage,
-                  onPressed: () => onPressed(
-                   manga,
-                   MediaListModel(name: listTitle, mediaType: MediaType.manga)
-                  ),
-                  status: manga.status,
-                  year: manga.startDate,
-                  format: manga.format,
-                  tag: "$listTitle-${manga.id}",
+            itemCount: mangaList.length,
+            itemBuilder: (context, index) {
+              final manga = mangaList[index];
+              return MediaCard(
+                title: manga.title.userPreferred,
+                score: manga.averageScore,
+                coverImage: manga.coverImage,
+                onPressed: () => onPressed(
+                  manga,
+                  MediaListModel(name: listTitle, mediaType: MediaType.manga),
                 ),
-              ),
-              //TODO loadMore Widget
-            ],
+                status: manga.status,
+                year: manga.startDate,
+                format: manga.format,
+                tag: "$listTitle-${manga.id}",
+              );
+            },
+            // TODO loadMore Widget
           ),
         ),
       ],

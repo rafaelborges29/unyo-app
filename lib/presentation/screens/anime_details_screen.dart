@@ -44,9 +44,7 @@ class _AnimeDetailsListener extends StatelessWidget {
           );
         }
       },
-      child: BlocBuilder<AnimeDetailsCubit, AnimeDetailsState>(
-        builder: (context, state) => const _AnimeDetailsView(),
-      ),
+      child: const _AnimeDetailsView(),
     );
   }
 }
@@ -69,27 +67,25 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
     super.dispose();
   }
 
-  List<Widget> _getEpisodeButtonsWidgets(AnimeDetailsState state) {
-    int numEpisodes = max(state.selectedAnime.episodes, state.episodesInfo.length);
-    if (numEpisodes == 0) {
-      return [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 80.h),
-            const Text(
-              "Nothing to see here! Come back later :D",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ];
-    }
-    List<Widget> episodeButtons = [];
-    for (int i = 0; i < numEpisodes; i++) {
-      episodeButtons.add(
-        UnyoEpisodeButton(
+  Widget _buildEpisodeList(AnimeDetailsState state) {
+    final numEpisodes = max(state.selectedAnime.episodes, state.episodesInfo.length);
+    return ListView.builder(
+      itemCount: numEpisodes == 0 ? 1 : numEpisodes,
+      itemBuilder: (_, i) {
+        if (numEpisodes == 0) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 80.h),
+              const Text(
+                "Nothing to see here! Come back later :D",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                maxLines: 3,
+              ),
+            ],
+          );
+        }
+        return UnyoEpisodeButton(
           mainTitle: "Episode ${i + 1}",
           secondaryTitle:
               state.episodesInfo.length > i
@@ -109,10 +105,9 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                   : numEpisodes,
           showDivider: i != 0,
           onPressed: () => context.read<AnimeDetailsCubit>().openAnimeServerSelectionDrawer(context, i),
-        ),
-      );
-    }
-    return episodeButtons;
+        );
+      },
+    );
   }
 
   @override
@@ -325,7 +320,7 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                             ),
                           ),
                           SizedBox(height: 15.h),
-                          Expanded(child: ListView(children: [..._getEpisodeButtonsWidgets(state)])),
+                          Expanded(child: _buildEpisodeList(state)),
                         ],
                       ),
                     ),

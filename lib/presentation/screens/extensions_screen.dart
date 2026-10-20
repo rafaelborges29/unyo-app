@@ -89,6 +89,10 @@ class _ExtensionsViewState extends State<_ExtensionsView> with TickerProviderSta
   Widget build(BuildContext context) {
     return BlocBuilder<ExtensionsCubit, ExtensionsState>(
       builder: (context, state) {
+        final availableAnimeExtensions = _filter(state.availableAnimeExtensions);
+        final availableMangaExtensions = _filter(state.availableMangaExtensions);
+        final installedAnimeExtensions = _filter(state.installedAnimeExtensions);
+        final installedMangaExtensions = _filter(state.installedMangaExtensions);
         return Column(
           children: [
             const SizedBox(height: 15),
@@ -204,79 +208,79 @@ class _ExtensionsViewState extends State<_ExtensionsView> with TickerProviderSta
                 child: TabBarView(
                   controller: tabController,
                   children: [
-                    ListView(
+                    ListView.builder(
                       scrollDirection: Axis.vertical,
-                      children: [
-                        ..._filter(state.availableAnimeExtensions).map(
-                          (extension) => UnyoExtensionButton(
-                            iconUrl: extension.icon,
-                            name: extension.name,
-                            lang: extension.lang,
-                            version: extension.version,
-                            nsfw: extension.nsfw,
-                            repoUrl: extension.repositoryUrl,
-                            onDownloadPressed: () =>
-                                context.read<ExtensionsCubit>().downloadExtension(extension),
-                          ),
-                        ),
-                      ],
+                      itemCount: availableAnimeExtensions.length,
+                      itemBuilder: (context, index) {
+                        final extension = availableAnimeExtensions[index];
+                        return UnyoExtensionButton(
+                          iconUrl: extension.icon,
+                          name: extension.name,
+                          lang: extension.lang,
+                          version: extension.version,
+                          nsfw: extension.nsfw,
+                          repoUrl: extension.repositoryUrl,
+                          onDownloadPressed: () =>
+                              context.read<ExtensionsCubit>().downloadExtension(extension),
+                        );
+                      },
                     ),
-                    ListView(
+                    ListView.builder(
                       scrollDirection: Axis.vertical,
-                      children: [
-                        ..._filter(state.availableMangaExtensions).map(
-                          (extension) => UnyoExtensionButton(
-                            iconUrl: extension.icon,
-                            name: extension.name,
-                            lang: extension.lang,
-                            version: extension.version,
-                            nsfw: extension.nsfw,
-                            repoUrl: extension.repositoryUrl,
-                            onDownloadPressed: () =>
-                                context.read<ExtensionsCubit>().downloadExtension(extension),
-                          ),
-                        ),
-                      ],
+                      itemCount: availableMangaExtensions.length,
+                      itemBuilder: (context, index) {
+                        final extension = availableMangaExtensions[index];
+                        return UnyoExtensionButton(
+                          iconUrl: extension.icon,
+                          name: extension.name,
+                          lang: extension.lang,
+                          version: extension.version,
+                          nsfw: extension.nsfw,
+                          repoUrl: extension.repositoryUrl,
+                          onDownloadPressed: () =>
+                              context.read<ExtensionsCubit>().downloadExtension(extension),
+                        );
+                      },
                     ),
-                    ListView(
+                    ListView.builder(
                       scrollDirection: Axis.vertical,
-                      children: [
-                        ..._filter(state.installedAnimeExtensions).map(
-                          (extension) => UnyoExtensionButton(
-                            iconUrl: extension.icon,
-                            name: extension.name,
-                            lang: extension.lang,
-                            version: extension.version,
-                            nsfw: extension.nsfw,
-                            repoUrl: extension.repositoryUrl,
-                            onUpdatePressed: state.animeExtensionUpdates.containsKey(extension.pkg)
-                                ? () => context.read<ExtensionsCubit>().updateExtension(extension)
-                                : null,
-                            onDeletePressed: () => context.read<ExtensionsCubit>().removeExtension(extension),
-                            onSettingsPressed: () => context.read<ExtensionsCubit>().openExtensionPreferences(extension),
-                          ),
-                        ),
-                      ],
+                      itemCount: installedAnimeExtensions.length,
+                      itemBuilder: (context, index) {
+                        final extension = installedAnimeExtensions[index];
+                        return UnyoExtensionButton(
+                          iconUrl: extension.icon,
+                          name: extension.name,
+                          lang: extension.lang,
+                          version: extension.version,
+                          nsfw: extension.nsfw,
+                          repoUrl: extension.repositoryUrl,
+                          onUpdatePressed: state.animeExtensionUpdates.containsKey(extension.pkg)
+                              ? () => context.read<ExtensionsCubit>().updateExtension(extension)
+                              : null,
+                          onDeletePressed: () => context.read<ExtensionsCubit>().removeExtension(extension),
+                          onSettingsPressed: () => context.read<ExtensionsCubit>().openExtensionPreferences(extension),
+                        );
+                      },
                     ),
-                    ListView(
+                    ListView.builder(
                       scrollDirection: Axis.vertical,
-                      children: [
-                        ..._filter(state.installedMangaExtensions).map(
-                          (extension) => UnyoExtensionButton(
-                            iconUrl: extension.icon,
-                            name: extension.name,
-                            lang: extension.lang,
-                            version: extension.version,
-                            nsfw: extension.nsfw,
-                            repoUrl: extension.repositoryUrl,
-                            onUpdatePressed: state.mangaExtensionUpdates.containsKey(extension.pkg)
-                                ? () => context.read<ExtensionsCubit>().updateExtension(extension)
-                                : null,
-                            onDeletePressed: () => context.read<ExtensionsCubit>().removeExtension(extension),
-                            onSettingsPressed: () => context.read<ExtensionsCubit>().openExtensionPreferences(extension),
-                          ),
-                        ),
-                      ],
+                      itemCount: installedMangaExtensions.length,
+                      itemBuilder: (context, index) {
+                        final extension = installedMangaExtensions[index];
+                        return UnyoExtensionButton(
+                          iconUrl: extension.icon,
+                          name: extension.name,
+                          lang: extension.lang,
+                          version: extension.version,
+                          nsfw: extension.nsfw,
+                          repoUrl: extension.repositoryUrl,
+                          onUpdatePressed: state.mangaExtensionUpdates.containsKey(extension.pkg)
+                              ? () => context.read<ExtensionsCubit>().updateExtension(extension)
+                              : null,
+                          onDeletePressed: () => context.read<ExtensionsCubit>().removeExtension(extension),
+                          onSettingsPressed: () => context.read<ExtensionsCubit>().openExtensionPreferences(extension),
+                        );
+                      },
                     ),
                   ],
                 ),
