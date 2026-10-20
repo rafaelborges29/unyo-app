@@ -37,7 +37,7 @@ class _HomeListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<HomeCubit>().clearEffects,
+            context.read<HomeCubit>().consumeEffect,
           );
         }
       },

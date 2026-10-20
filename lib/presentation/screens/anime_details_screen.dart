@@ -40,7 +40,7 @@ class _AnimeDetailsListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<AnimeDetailsCubit>().clearEffects,
+            context.read<AnimeDetailsCubit>().consumeEffect,
           );
         }
       },

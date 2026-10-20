@@ -35,7 +35,7 @@ class _VideoListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<VideoCubit>().clearEffects,
+            context.read<VideoCubit>().consumeEffect,
           );
         }
       },

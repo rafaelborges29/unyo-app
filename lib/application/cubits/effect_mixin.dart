@@ -27,9 +27,17 @@ mixin EffectMixin<State> on Cubit<State> {
     emit(copyStateWithEffects(current, newEffects));
   }
 
-  void clearEffects() {
-    logger.d("Clearing all effects");
-    emit(copyStateWithEffects(state, []));
+  bool consumeEffect(AppEffect effect) {
+    final effects = _currentEffects;
+    if (!effects.any((pending) => identical(pending, effect))) return false;
+
+    logger.d("Consuming AppEffect: $effect");
+    // Queued snapshots can still contain this effect after it is consumed.
+    emit(copyStateWithEffects(state, [
+      for (final pending in effects)
+        if (!identical(pending, effect)) pending,
+    ]));
+    return true;
   }
 
   List<AppEffect> get _currentEffects {

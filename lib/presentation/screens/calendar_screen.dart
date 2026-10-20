@@ -42,7 +42,7 @@ class _CalendarListener extends StatelessWidget {
             state.effects,
             context
                 .read<CalendarCubit>()
-                .clearEffects,
+                .consumeEffect,
           );
         }
       },

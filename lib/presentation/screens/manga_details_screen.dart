@@ -39,7 +39,7 @@ class _MangaDetailsListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<MangaDetailsCubit>().clearEffects,
+            context.read<MangaDetailsCubit>().consumeEffect,
           );
         }
       },

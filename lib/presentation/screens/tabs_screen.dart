@@ -35,7 +35,7 @@ class _TabsListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<TabsCubit>().clearEffects,
+            context.read<TabsCubit>().consumeEffect,
           );
         }
       },

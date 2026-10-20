@@ -35,7 +35,7 @@ class _MediaListListener extends StatelessWidget {
     return BlocListener<MediaListCubit, MediaListState>(
       listener: (context, state) {
         if (state.effects.isNotEmpty) {
-          sl<AppEffectHandler>().handleEffects(context, state.effects, context.read<MediaListCubit>().clearEffects);
+          sl<AppEffectHandler>().handleEffects(context, state.effects, context.read<MediaListCubit>().consumeEffect);
         }
       },
       child: _MediaListView(type: type),
