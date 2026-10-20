@@ -43,136 +43,128 @@ class _MediaListListener extends StatelessWidget {
   }
 }
 
-class _MediaListView extends StatefulWidget {
+class _MediaListView extends StatelessWidget {
   final MediaType type;
 
   const _MediaListView({required this.type});
 
   @override
-  State<_MediaListView> createState() => _MediaListViewState();
-}
-
-class _MediaListViewState extends State<_MediaListView> with TickerProviderStateMixin {
-  @override
   Widget build(BuildContext context) {
     return BlocBuilder<MediaListCubit, MediaListState>(
       builder: (context, state) {
-        final TabController tabController = TabController(
-          length: widget.type == MediaType.anime ? state.userAnimeLists.length : state.userMangaLists.length,
-          vsync: this,
-        );
-        return Column(
-          children: [
-            const SizedBox(height: 15),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: Row(
-                children: [
-                  const SizedBox(width: 5),
-                  IconButton(
-                    onPressed: () => context.read<MediaListCubit>().popScreen(context),
-                    icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorScheme.of(context).tertiary),
-                  ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const TextHeadlineMedium(text: "Hi ", style: TextStyle(fontWeight: FontWeight.bold)),
-                          TextHeadlineMedium(
-                            text: "${state.loggedUser.name}! ",
-                            style: TextStyle(color: ColorScheme.of(context).tertiary, fontWeight: FontWeight.bold),
-                          ),
-                          TextHeadlineMedium(
-                            text: "Welcome to your ${widget.type == MediaType.anime ? "Anime" : "Manga"} Lists!",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextBodyLarge(
-                            text: "You can find and remember your favorite ${widget.type == MediaType.anime ? "anime" : "manga"} here",
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: TabBar(
-                labelColor: Colors.white,
-                dividerColor: ColorScheme.of(context).secondary.withValues(alpha: 0.5),
-                indicatorColor: ColorScheme.of(context).primary,
-                unselectedLabelColor: Colors.grey,
-                isScrollable: true,
-                controller: tabController,
-                tabs: [
-                  ...(widget.type == MediaType.anime ? state.userAnimeLists : state.userMangaLists).entries.map((entry) {
-                    String title = entry.key;
-                    return Tooltip(
-                      waitDuration: const Duration(milliseconds: 1000),
-                      message: "$title (${entry.value.length})",
-                      child: SizedBox(width: 150, child: Tab(text: "$title (${entry.value.length})")),
-                    );
-                  }),
-                ],
-              ),
-            ),
-            SizedBox(
-              height: 1.sh - 135,
-              child: Padding(
-                padding: EdgeInsets.only(left: 15.0.w, right: 15.0.w, top: 15.0.h),
-                child: TabBarView(
-                  controller: tabController,
+        return DefaultTabController(
+          length: type == MediaType.anime ? state.userAnimeLists.length : state.userMangaLists.length,
+          child: Column(
+            children: [
+              const SizedBox(height: 15),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: Row(
                   children: [
-                    ...(widget.type == MediaType.anime ? state.userAnimeLists : state.userMangaLists).entries.map((entry) {
-                      List<Anime>? animeList = widget.type == MediaType.anime ? entry.value as List<Anime> : null;
-                      List<Manga>? mangaList = widget.type == MediaType.manga ? entry.value as List<Manga> : null;
-                      return GridView.builder(
-                        scrollDirection: Axis.vertical,
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 165,
-                          mainAxisExtent: 260,
-                          crossAxisSpacing: 5,
-                          mainAxisSpacing: 15,
-                        ),
-                        itemCount: animeList != null ? animeList.length : mangaList!.length,
-                        itemBuilder:
-                            (context, index) => SizedBox(
-                              width: 165,
-                              child: MediaCard(
-                                title: animeList != null ? animeList[index].title.userPreferred : mangaList![index].title.userPreferred,
-                                score: animeList != null ? animeList[index].averageScore : mangaList![index].averageScore,
-                                coverImage: animeList != null ? animeList[index].coverImage : mangaList![index].coverImage,
-                                onPressed:
-                                    () => context.read<MediaListCubit>().navigateToMediaDetails(
-                                      animeList != null ? animeList[index] : mangaList![index],
-                                      MediaListModel(name: "MediaList", mediaType: animeList != null ? MediaType.anime : MediaType.manga),
-                                    ),
-                                status: animeList != null ? animeList[index].status : mangaList![index].status,
-                                year: animeList != null ? animeList[index].startDate : mangaList![index].startDate,
-                                format: animeList != null ? animeList[index].format : mangaList![index].format,
-                                tag: "MediaList-${animeList != null ? animeList[index].id : mangaList![index].id}",
-                              ),
+                    const SizedBox(width: 5),
+                    IconButton(
+                      onPressed: () => context.read<MediaListCubit>().popScreen(context),
+                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: ColorScheme.of(context).tertiary),
+                    ),
+                    const SizedBox(width: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            const TextHeadlineMedium(text: "Hi ", style: TextStyle(fontWeight: FontWeight.bold)),
+                            TextHeadlineMedium(
+                              text: "${state.loggedUser.name}! ",
+                              style: TextStyle(color: ColorScheme.of(context).tertiary, fontWeight: FontWeight.bold),
                             ),
+                            TextHeadlineMedium(
+                              text: "Welcome to your ${type == MediaType.anime ? "Anime" : "Manga"} Lists!",
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            TextBodyLarge(
+                              text: "You can find and remember your favorite ${type == MediaType.anime ? "anime" : "manga"} here",
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: TabBar(
+                  labelColor: Colors.white,
+                  dividerColor: ColorScheme.of(context).secondary.withValues(alpha: 0.5),
+                  indicatorColor: ColorScheme.of(context).primary,
+                  unselectedLabelColor: Colors.grey,
+                  isScrollable: true,
+                  tabs: [
+                    ...(type == MediaType.anime ? state.userAnimeLists : state.userMangaLists).entries.map((entry) {
+                      String title = entry.key;
+                      return Tooltip(
+                        waitDuration: const Duration(milliseconds: 1000),
+                        message: "$title (${entry.value.length})",
+                        child: SizedBox(width: 150, child: Tab(text: "$title (${entry.value.length})")),
                       );
                     }),
                   ],
                 ),
               ),
-            ),
-          ],
+              SizedBox(
+                height: 1.sh - 135,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 15.0.w, right: 15.0.w, top: 15.0.h),
+                  child: TabBarView(
+                    children: [
+                      ...(type == MediaType.anime ? state.userAnimeLists : state.userMangaLists).entries.map((entry) {
+                        List<Anime>? animeList = type == MediaType.anime ? entry.value as List<Anime> : null;
+                        List<Manga>? mangaList = type == MediaType.manga ? entry.value as List<Manga> : null;
+                        return GridView.builder(
+                          scrollDirection: Axis.vertical,
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 165,
+                            mainAxisExtent: 260,
+                            crossAxisSpacing: 5,
+                            mainAxisSpacing: 15,
+                          ),
+                          itemCount: animeList != null ? animeList.length : mangaList!.length,
+                          itemBuilder:
+                              (context, index) => SizedBox(
+                                width: 165,
+                                child: MediaCard(
+                                  title: animeList != null ? animeList[index].title.userPreferred : mangaList![index].title.userPreferred,
+                                  score: animeList != null ? animeList[index].averageScore : mangaList![index].averageScore,
+                                  coverImage: animeList != null ? animeList[index].coverImage : mangaList![index].coverImage,
+                                  onPressed:
+                                      () => context.read<MediaListCubit>().navigateToMediaDetails(
+                                        animeList != null ? animeList[index] : mangaList![index],
+                                        MediaListModel(name: "MediaList", mediaType: animeList != null ? MediaType.anime : MediaType.manga),
+                                      ),
+                                  status: animeList != null ? animeList[index].status : mangaList![index].status,
+                                  year: animeList != null ? animeList[index].startDate : mangaList![index].startDate,
+                                  format: animeList != null ? animeList[index].format : mangaList![index].format,
+                                  tag: "MediaList-${animeList != null ? animeList[index].id : mangaList![index].id}",
+                                ),
+                              ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
