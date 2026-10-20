@@ -15,14 +15,23 @@ class CustomMaterialDesktopVolumeButtonState extends State<UnyoVolumeButton>
     with SingleTickerProviderStateMixin {
   bool hover = false;
 
-  bool mute = false;
-  double _volume = 0.0;
+  double _lastNonZeroVolume = 1.0;
 
   @override
   void setState(VoidCallback fn) {
     if (mounted) {
       super.setState(fn);
     }
+  }
+
+  void _setVolume(double volume) {
+    setState(() {
+      final currentVolume = widget.videoService.volume;
+      if (currentVolume > 0.0) {
+        _lastNonZeroVolume = currentVolume;
+      }
+      widget.videoService.setVolume(volume);
+    });
   }
 
   @override
@@ -43,32 +52,19 @@ class CustomMaterialDesktopVolumeButtonState extends State<UnyoVolumeButton>
           if (event is PointerScrollEvent) {
             double volume = widget.videoService.volume;
             if (event.scrollDelta.dy < 0) {
-              widget.videoService.setVolume((volume + 0.1).clamp(0.0, 1.0));
+              _setVolume((volume + 0.1).clamp(0.0, 1.0));
             }
             if (event.scrollDelta.dy > 0) {
-              widget.videoService.setVolume((volume - 0.1).clamp(0.0, 1.0));
+              _setVolume((volume - 0.1).clamp(0.0, 1.0));
             }
           }
         },
         child: Row(
           children: [
             IconButton(
-              onPressed: () async {
+              onPressed: () {
                 double volume = widget.videoService.volume;
-                if (mute) {
-                  widget.videoService.setVolume(_volume);
-                  mute = !mute;
-                } else if (volume == 0.0) {
-                  _volume = 1.0;
-                  widget.videoService.setVolume(1.0);
-                  mute = false;
-                } else {
-                  _volume = volume;
-                  widget.videoService.setVolume(0.0);
-                  mute = !mute;
-                }
-
-                setState(() {});
+                _setVolume(volume == 0.0 ? _lastNonZeroVolume : 0.0);
               },
               iconSize: 27,
               color: Colors.white,
@@ -116,12 +112,7 @@ class CustomMaterialDesktopVolumeButtonState extends State<UnyoVolumeButton>
                             value: widget.videoService.volume,
                             label: "${(widget.videoService.volume * 100).toInt().toString()}%",
                             divisions: 100,
-                            onChanged: (value) {
-                              setState(() {
-                                mute = false;
-                                widget.videoService.setVolume(value);
-                              });
-                            },
+                            onChanged: _setVolume,
                           ),
                         ),
                       ),
