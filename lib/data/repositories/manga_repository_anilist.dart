@@ -54,7 +54,7 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
                   AnilistMangaModel.fromPopularOrTrendingMediaEntry(mediaEntry),
             )
             .toList();
-    return (true, popularMangas);
+    return (true, popularMangas.where((manga) => !manga.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -80,7 +80,7 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
         recentlyCompleted.data.page.media
             .map((mediaEntry) => AnilistMangaModel.fromRecentlyCompletedMediaEntry(mediaEntry))
             .toList();
-    return (true, recentlyCompletedMangas);
+    return (true, recentlyCompletedMangas.where((manga) => !manga.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -105,7 +105,7 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
           AnilistMangaModel.fromPopularOrTrendingMediaEntry(mediaEntry),
     )
         .toList();
-    return (true, trendingMangas);
+    return (true, trendingMangas.where((manga) => !manga.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -129,7 +129,7 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
     upcoming.data.page.media
         .map((mediaEntry) => AnilistMangaModel.fromUpcomingMediaEntry(mediaEntry))
         .toList();
-    return (true, upcomingMangas);
+    return (true, upcomingMangas.where((manga) => !manga.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -263,7 +263,7 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
             .map((mediaEntry) => AnilistMangaModel.fromAdvancedSearchMediaEntry(mediaEntry))
             .toList();
     
-    return searchResults;
+    return searchResults.where((manga) => !manga.isAdult || loggedUser.settings.enableNsfwContent).toList();
   }
 
   @override
@@ -300,11 +300,15 @@ class MangaRepositoryAnilist with RepositoryMixin implements MangaRepository {
       headers: graphQlHeaders,
     );
     throwIfGraphQlError(mediaDetailsMediaListEntry);
-    MangaDetails mangaDetails = AnilistMangaDetailsModel.fromMangaDetailsMediaList(
+    final mangaDetails = AnilistMangaDetailsModel.fromMangaDetailsMediaList(
       mangaDetailsData.data.media,
       mediaDetailsMediaListEntry.data,
     );
-    return (true, mangaDetails);
+    return (true, mangaDetails.copyWith(
+      recommendedMangas: mangaDetails.recommendedMangas
+          .where((manga) => !manga.isAdult || loggedUser.settings.enableNsfwContent)
+          .toList(),
+    ));
   }
 }
 

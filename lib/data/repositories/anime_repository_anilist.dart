@@ -55,7 +55,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
         popularMediaCollection.data.page.media
             .map((mediaEntry) => AnilistAnimeModel.fromPopularOrTrendingMediaEntry(mediaEntry))
             .toList();
-    return (true, popularAnimes);
+    return (true, popularAnimes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -83,7 +83,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
         recentlyCompleted.data.page.media
             .map((mediaEntry) => AnilistAnimeModel.fromRecentlyCompletedMediaEntry(mediaEntry))
             .toList();
-    return (true, recentlyCompletedAnimes);
+    return (true, recentlyCompletedAnimes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -128,7 +128,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
         trendingMediaCollection.data.page.media
             .map((mediaEntry) => AnilistAnimeModel.fromPopularOrTrendingMediaEntry(mediaEntry))
             .toList();
-    return (true, trendingAnimes);
+    return (true, trendingAnimes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -152,7 +152,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
         upcoming.data.page.media
             .map((mediaEntry) => AnilistAnimeModel.fromUpcomingMediaEntry(mediaEntry))
             .toList();
-    return (true, upcomingAnimes);
+    return (true, upcomingAnimes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -246,11 +246,15 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
       headers: graphQlHeaders,
     );
     throwIfGraphQlError(mediaDetailsMediaListEntry);
-    AnimeDetails animeDetails = AnilistAnimeDetailsModel.fromAnimeDetailsMediaList(
+    final animeDetails = AnilistAnimeDetailsModel.fromAnimeDetailsMediaList(
       animeDetailsData.data.media,
       mediaDetailsMediaListEntry.data,
     );
-    return (true, animeDetails);
+    return (true, animeDetails.copyWith(
+      recommendedAnimes: animeDetails.recommendedAnimes
+          .where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent)
+          .toList(),
+    ));
   }
 
   @override
@@ -362,7 +366,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
         animeAdvancedSearchData.data.page.media
             .map((mediaEntry) => AnilistAnimeModel.fromAdvancedSearchMediaEntry(mediaEntry))
             .toList();
-    return searchResults;
+    return searchResults.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList();
   }
 
   Future<List<Anime>> _getCalendarReleasesPage(int page) async {
