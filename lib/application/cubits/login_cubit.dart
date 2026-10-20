@@ -106,13 +106,18 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
         case AnilistUserModel anilistUserModel:
           _logger.i("Logging in Anilist User: ${anilistUserModel.name}");
           await _loginAnilistUser(anilistUserModel);
-        case LocalUserModel localUserModel:
-          _logger.i("Logging in Local User: ${localUserModel.name}");
+        case LocalUserModel():
+          handleError(
+            "Local accounts are not available yet",
+            contentType: ContentType.warning,
+          );
+          return;
         default:
           handleError(
             "Unsupported user type for login: ${user.runtimeType}",
             contentType: ContentType.warning,
           );
+          return;
       }
       // Init User Extensions
       // _loadUserExtensions();
@@ -131,9 +136,12 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
         _logger.i("Attempting to create Anilist User");
         await _createAnilistUser();
       case LoginCardType.mal:
-        _logger.i("Attempting to create MyAnimeList User");
       case LoginCardType.local:
-        _logger.i("Attempting to create Local User");
+        handleError(
+          "This account type is not available yet",
+          contentType: ContentType.warning,
+        );
+        return;
     }
     if (context.mounted) closeDialogEffect(context);
   }
