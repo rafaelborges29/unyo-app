@@ -31,7 +31,7 @@ class MediaButton extends StatelessWidget {
                 border: Border.all(
                     color: ColorScheme.of(context).secondary.withValues(alpha: 0.4), width: 2),
                 borderRadius: BorderRadius.circular(20),
-                image: DecorationImage(
+                image: image.isNotEmpty ? DecorationImage(
                   opacity: 0.35,
                   colorFilter:
                       ColorFilter.mode(ColorScheme.of(context).secondary, BlendMode.modulate),
@@ -39,7 +39,7 @@ class MediaButton extends StatelessWidget {
                     image,
                   ),
                   fit: BoxFit.cover,
-                ),
+                ) : null,
               ),
               hoverDecoration: BoxDecoration(
                 gradient: const LinearGradient(
@@ -50,7 +50,7 @@ class MediaButton extends StatelessWidget {
                 border: Border.all(
                     color: ColorScheme.of(context).secondary.withValues(alpha: 0.4), width: 2),
                 borderRadius: BorderRadius.circular(20),
-                image: DecorationImage(
+                image: image.isNotEmpty ? DecorationImage(
                   opacity: 0.35,
                   colorFilter:
                       ColorFilter.mode(ColorScheme.of(context).primary, BlendMode.modulate),
@@ -58,7 +58,7 @@ class MediaButton extends StatelessWidget {
                     image,
                   ),
                   fit: BoxFit.cover,
-                ),
+                ) : null,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

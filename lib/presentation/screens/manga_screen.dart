@@ -106,7 +106,7 @@ class _MangaViewState extends State<_MangaView> {
                     MediaButton(
                       onPressed: () => context.read<MangaCubit>().navigateToAdvancedSearch(context),
                       image:
-                          state.banners.isNotEmpty
+                          state.banners.length > 1
                               ? state
                                   .banners[1]
                                   .bannerImage
