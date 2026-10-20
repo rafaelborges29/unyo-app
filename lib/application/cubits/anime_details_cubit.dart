@@ -69,6 +69,9 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   late StreamSubscription<MediaList> _selectedMediaListSubscription;
   late StreamSubscription<ReloadType> _reloadSubscription;
 
+  // Invalidated whenever the anime or extension selection changes.
+  int _extensionSelectionId = 0;
+
   // Logger
   final Logger _logger = sl<Logger>();
 
@@ -141,7 +144,14 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     _selectedAnimeSubscription = _selectedAnimeNotifier.animeStream.listen((anime) {
       _getAnimeDetails(state.loggedUser, anime);
       _getEpisodesDetails(state.loggedUser, anime);
-      emit(state.copyWith(selectedAnime: anime));
+      if (state.selectedAnime.id != anime.id) {
+        _resetExtensionState(anime);
+        if (state.installedExtensions.isNotEmpty) {
+          _setSelectedExtension(state.loggedUser, anime);
+        }
+      } else {
+        emit(state.copyWith(selectedAnime: anime));
+      }
     });
     _selectedMediaListSubscription = _selectedMediaListNotifier.mediaListStream.listen((mediaList) {
       emit(state.copyWith(selectedMediaList: mediaList));
@@ -186,6 +196,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> navigateToVideoPlayer(ext.Video selectedVideo, int episodeIndex, int videoIndex) async {
+    if (!state.animeServerDialogReady || !state.extensionVideoResults.contains(selectedVideo)) return;
     _logger.i("Navigating to Video Player with selected video from ${state.selectedExtension?.name}");
     _mediaListEntryNotifier.updateSelectedMediaListEntry(state.mediaListEntry);
     _videoInfoNotifier.updateVideoInfo(
@@ -199,14 +210,32 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     pushRouteEffect(path: "/video");
   }
 
+  void _resetExtensionState(Anime anime, {Extension? selectedExtension}) {
+    _extensionSelectionId++;
+    emit(
+      state.copyWith(
+        selectedAnime: anime,
+        selectedExtension: selectedExtension,
+        extensionAnimeResults: [],
+        selectedAnimeResultIndex: 0,
+        extensionEpisodeResults: [],
+        extensionVideoResults: [],
+        animeServerDialogReady: false,
+        animeServerDialogLoading: false,
+      ),
+    );
+    _selectedExtensionNotifier.updateSelectedExtension(selectedExtension ?? ExtensionModel.empty());
+    _selectedEpisodesNotifier.updateSelectedJSEpisodes([]);
+  }
+
   Future<void> selectAnimeExtension(String? selectedAnimeExtensionName) async {
     Extension? selectedExtension =
         state.installedExtensions
             .where((extension) => selectedAnimeExtensionName == extension.name)
             .firstOrNull;
     if (selectedExtension != null) {
-      emit(state.copyWith(selectedExtension: selectedExtension));
-      _selectedExtensionNotifier.updateSelectedExtension(selectedExtension);
+      _resetExtensionState(state.selectedAnime, selectedExtension: selectedExtension);
+      final selectionId = _extensionSelectionId;
       switch (state.loggedUser) {
         case AnilistUserModel anilistUserModel:
           SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
@@ -219,7 +248,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           );
         case LocalUserModel localUserModel:
       }
-      _getAnimeInfoFromSelectedExtension(selectedExtension);
+      if (isClosed || selectionId != _extensionSelectionId) return;
+      await _getAnimeInfoFromSelectedExtension(selectedExtension);
     } else {
       _logger.w("Selected extension $selectedAnimeExtensionName not found among installed extensions.");
       showSnackBarEffect(
@@ -236,12 +266,14 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
 
   Future<void> openAnimeServerSelectionDrawer(BuildContext context, int episodeIndex) async {
     if (state.animeServerDialogLoading) return;
+    final selectionId = _extensionSelectionId;
     emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: true, extensionVideoResults: []));
     // TODO - You may not want to select the found index (selectedAnimeResultIndex) on extensionAnimeResults
     bool canOpenDrawer = await _getEpisodesFromSelectedExtension(
       state.selectedExtension,
-      state.extensionAnimeResults[state.selectedAnimeResultIndex],
+      state.extensionAnimeResults.elementAtOrNull(state.selectedAnimeResultIndex),
     );
+    if (isClosed || selectionId != _extensionSelectionId) return;
     if (!canOpenDrawer) {
       emit(state.copyWith(animeServerDialogLoading: false));
      return;
@@ -251,7 +283,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           cubit: this,
           episodeIndex: episodeIndex,
           onOpen: () async {
-            if (episodeIndex >= state.extensionEpisodeResults.length) {
+            if (isClosed || selectionId != _extensionSelectionId) return false;
+            if (episodeIndex < 0 || episodeIndex >= state.extensionEpisodeResults.length) {
               _logger.w("Episode index $episodeIndex is out of bounds for extension episode results.");
               showSnackBarEffect("${state.selectedExtension?.name} Error", message: "Only ${state.extensionEpisodeResults.length} episodes were found", contentType: ContentType.warning);
               return false;
@@ -260,6 +293,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
               state.selectedExtension,
               state.extensionEpisodeResults[episodeIndex],
             );
+            if (isClosed || selectionId != _extensionSelectionId) return false;
             if (!shouldKeepDialog && context.mounted) {
               emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: false));
               return false;
@@ -480,6 +514,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> _getAnimeInfoFromSelectedExtension(Extension selectedExtension) async {
+    final selectionId = _extensionSelectionId;
+    final selectedAnime = state.selectedAnime;
     try {
       if (state.installedExtensions.isEmpty) {
         _logger.w("No installed extensions available to fetch anime info.");
@@ -491,34 +527,39 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         return;
       }
       _logger.i(
-        "Fetching Anime Info from extension ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}",
+        "Fetching Anime Info from extension ${selectedExtension.name} for ${selectedAnime.title.userPreferred}",
       );
       List<JSAnime> animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
-        state.selectedAnime.title.userPreferred,
+        selectedAnime.title.userPreferred,
         selectedExtension,
       );
+      if (isClosed || selectionId != _extensionSelectionId) return;
       if (animeResults.isEmpty) {
-        _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}, trying alternative english title.");
+        _logger.w("No results found in ${selectedExtension.name} for ${selectedAnime.title.userPreferred}, trying alternative english title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
-          state.selectedAnime.title.english,
+          selectedAnime.title.english,
           selectedExtension,
         );
       }
+      if (isClosed || selectionId != _extensionSelectionId) return;
       if (animeResults.isEmpty) {
-        _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.english}, trying alternative native title.");
+        _logger.w("No results found in ${selectedExtension.name} for ${selectedAnime.title.english}, trying alternative native title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
-          state.selectedAnime.title.nativeTitle,
+          selectedAnime.title.nativeTitle,
           selectedExtension,
         );
       }
+      if (isClosed || selectionId != _extensionSelectionId) return;
       if (animeResults.isEmpty) {
-        _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.nativeTitle}, trying alternative romaji title.");
+        _logger.w("No results found in ${selectedExtension.name} for ${selectedAnime.title.nativeTitle}, trying alternative romaji title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
-          state.selectedAnime.title.romaji,
+          selectedAnime.title.romaji,
           selectedExtension,
         );
       }
-      int selectedAnimeResultIndex = await _fuzzySelectAnimeResultIndex(animeResults);
+      if (isClosed || selectionId != _extensionSelectionId) return;
+      int selectedAnimeResultIndex = animeResults.isEmpty ? 0 : await _fuzzySelectAnimeResultIndex(animeResults);
+      if (isClosed || selectionId != _extensionSelectionId) return;
       emit(state.copyWith(extensionAnimeResults: animeResults, selectedAnimeResultIndex: selectedAnimeResultIndex));
       if (animeResults.isNotEmpty) {
         showSnackBarEffect(
@@ -530,11 +571,12 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         showSnackBarEffect(
           selectedExtension.name,
           message:
-              "No results found in ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}",
+              "No results found in ${selectedExtension.name} for ${selectedAnime.title.userPreferred}",
           contentType: ContentType.warning,
         );
       }
     } catch (e, stackTrace) {
+      if (isClosed || selectionId != _extensionSelectionId) return;
       handleError("Error fetching Anime Info from selected extension: $e", stackTrace: stackTrace);
     }
   }
@@ -582,6 +624,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       );
       return false;
     }
+    final selectionId = _extensionSelectionId;
     try {
       _logger.i(
         "Fetching Episodes Info from extension ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}",
@@ -590,6 +633,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         selectedJSAnime,
         selectedExtension,
       );
+      if (isClosed || selectionId != _extensionSelectionId) return false;
       if (episodeResults.isNotEmpty) {
         List<JSEpisode> sortedEpisodes = episodeResults.sorted((animeEpisode1, animeEpisode2) => animeEpisode1.getEpisode_number().toInt() - animeEpisode2.getEpisode_number().toInt());
         emit(state.copyWith(extensionEpisodeResults: sortedEpisodes));
@@ -605,6 +649,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         return false;
       }
     } catch (e, stackTrace) {
+      if (isClosed || selectionId != _extensionSelectionId) return false;
       handleError("Error fetching Episodes Info from selected extension: $e", stackTrace: stackTrace);
       return false;
     }
@@ -631,6 +676,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       );
       return false;
     }
+    final selectionId = _extensionSelectionId;
     try {
       _logger.i(
         "Fetching Videos Info from extension ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}",
@@ -639,6 +685,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         selectedJSEpisode,
         selectedExtension,
       );
+      if (isClosed || selectionId != _extensionSelectionId) return false;
       if (videoResults.isNotEmpty) {
         emit(state.copyWith(extensionVideoResults: videoResults.map((jVideo) => ext.Video.fromJVideo(jVideo)).toList()));
         return true;
@@ -652,6 +699,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         return false;
       }
     } catch (e, stackTrace) {
+      if (isClosed || selectionId != _extensionSelectionId) return false;
       handleError("Error fetching Videos Info from selected extension: $e", stackTrace: stackTrace);
       return false;
     }
