@@ -28,6 +28,7 @@ mixin EffectMixin<State> on Cubit<State> {
   }
 
   bool consumeEffect(AppEffect effect) {
+    if (isClosed) return false;
     final effects = _currentEffects;
     if (!effects.any((pending) => identical(pending, effect))) return false;
 
