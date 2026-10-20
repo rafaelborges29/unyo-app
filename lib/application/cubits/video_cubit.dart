@@ -112,6 +112,14 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
 
   VideoService get videoService => _videoService;
 
+  num? getEpisodeNumber(int playlistIndex) {
+    if (playlistIndex < 0 || playlistIndex >= state.extensionEpisodeResults.length) return null;
+    final episodeNumber = state.extensionEpisodeResults[playlistIndex].getEpisode_number();
+    if (!episodeNumber.isFinite) return null;
+    final wholeNumber = episodeNumber.toInt();
+    return episodeNumber == wholeNumber ? wholeNumber : episodeNumber;
+  }
+
   @override
   Future<void> close() {
     if (_videoServiceInitialized) {
@@ -195,10 +203,12 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   Future<void> _getAniskipSkipTimes(Anime selectedAnime, VideoInfo videoInfo) async {
+    final episodeNumber = getEpisodeNumber(videoInfo.playlistIndex);
+    if (episodeNumber is! int || episodeNumber <= 0) return;
     double formattedDuration = selectedAnime.duration > 0 ? selectedAnime.duration * 60 : 24 * 60;
     ApiResponse<AniskipTimesEntity> aniskipResponse =
       await _httpService.get(
-          "${config.aniskiBaseEndpoint}/v2/skip-times/${selectedAnime.idMal}/${videoInfo.playlistIndex + 1}?types=op&types=ed&episodeLength=$formattedDuration",
+          "${config.aniskiBaseEndpoint}/v2/skip-times/${selectedAnime.idMal}/$episodeNumber?types=op&types=ed&episodeLength=$formattedDuration",
           fromJson: AniskipTimesEntity.fromJson
       );
     if (aniskipResponse.statusCode > 299 || aniskipResponse.data.statusCode > 299) {
@@ -282,7 +292,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   void _sendMediaToCastSession(CastSession session) {
     final video = state.videoInfo.currentVideo;
     final anime = state.selectedAnime;
-    final episodeNumber = state.videoInfo.playlistIndex + 1;
+    final episodeNumber = getEpisodeNumber(state.videoInfo.playlistIndex) ?? '?';
 
     // Determine the content type based on the video URL
     final contentType = _getContentType(video.videoUrl);
@@ -385,20 +395,27 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     showWidgetDialogEffect(dialog: WarningDialog(width: 500, height: 200, title: errorTitle));
   }
 
-  Future<void> navigateToEpisode(int episodeIndex) async {
+  Future<void> navigateToEpisode(int episodeNumber) async {
     try {
-      _logger.i("Navigating to episode index: $episodeIndex");
+      final playlistIndex = state.extensionEpisodeResults.indexWhere(
+        (episode) => episode.getEpisode_number() == episodeNumber,
+      );
+      if (playlistIndex < 0) {
+        showSnackBarEffect("Episode Unavailable", message: "Episode $episodeNumber was not found in ${state.selectedExtension.name}", contentType: ContentType.warning);
+        return;
+      }
+      _logger.i("Navigating to episode $episodeNumber at playlist index $playlistIndex");
       _videoService.resetService();
       VideoInfo currentVideoInfo = state.videoInfo;
       List<ext.Video> alternativeVideos = await _getVideosFromSelectedExtension(
         state.selectedExtension,
-        state.extensionEpisodeResults[episodeIndex],
+        state.extensionEpisodeResults[playlistIndex],
       );
       VideoInfo videoInfo = VideoInfoModel(
         currentVideo: alternativeVideos[currentVideoInfo.videoIndex],
         alternativeVideos: alternativeVideos,
         videoIndex: currentVideoInfo.videoIndex,
-        playlistIndex: episodeIndex,
+        playlistIndex: playlistIndex,
       );
       await _selectNewEpisode(videoInfo);
     } catch (e, stackTrace) {
@@ -483,14 +500,16 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   Future<void> _markEpisodeAsWatched() async {
-    if (state.mediaListEntry.progress >= state.videoInfo.playlistIndex + 1) {
-      _logger.d("Episode ${state.videoInfo.playlistIndex + 1} is already marked as watched. No update needed.");
+    final episodeNumber = getEpisodeNumber(state.videoInfo.playlistIndex);
+    if (episodeNumber is! int || episodeNumber <= 0) return;
+    if (state.mediaListEntry.progress >= episodeNumber) {
+      _logger.d("Episode $episodeNumber is already marked as watched. No update needed.");
       return;
     }
-    _logger.i("Marking episode ${state.videoInfo.playlistIndex + 1} as watched in media list.");
+    _logger.i("Marking episode $episodeNumber as watched in media list.");
     try {
       MediaListEntry desiredMediaListEntry = (state.mediaListEntry as MediaListEntryModel).copyWith(
-        progress: state.videoInfo.playlistIndex + 1,
+        progress: episodeNumber,
         status: "Current",
       );
       _logger.i("Updating Media List Entry to $desiredMediaListEntry");

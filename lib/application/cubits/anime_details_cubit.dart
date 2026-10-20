@@ -234,7 +234,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     showWidgetDialogEffect(dialog: AnimeDetailsMediaEntryDialog(cubit: this));
   }
 
-  Future<void> openAnimeServerSelectionDrawer(BuildContext context, int episodeIndex) async {
+  Future<void> openAnimeServerSelectionDrawer(BuildContext context, int episodeNumber) async {
     if (state.animeServerDialogLoading) return;
     emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: true, extensionVideoResults: []));
     // TODO - You may not want to select the found index (selectedAnimeResultIndex) on extensionAnimeResults
@@ -246,19 +246,22 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       emit(state.copyWith(animeServerDialogLoading: false));
      return;
     }
+    final playlistIndex = state.extensionEpisodeResults.indexWhere(
+      (episode) => episode.getEpisode_number() == episodeNumber,
+    );
+    if (playlistIndex < 0) {
+      emit(state.copyWith(animeServerDialogLoading: false));
+      showSnackBarEffect("Episode Unavailable", message: "Episode $episodeNumber was not found in ${state.selectedExtension?.name}", contentType: ContentType.warning);
+      return;
+    }
     showDrawerDialogEffect(
         drawerDialog: AnimeServerSelectionDrawer(
           cubit: this,
-          episodeIndex: episodeIndex,
+          episodeIndex: playlistIndex,
           onOpen: () async {
-            if (episodeIndex >= state.extensionEpisodeResults.length) {
-              _logger.w("Episode index $episodeIndex is out of bounds for extension episode results.");
-              showSnackBarEffect("${state.selectedExtension?.name} Error", message: "Only ${state.extensionEpisodeResults.length} episodes were found", contentType: ContentType.warning);
-              return false;
-            }
             bool shouldKeepDialog = await _getVideosFromSelectedExtension(
               state.selectedExtension,
-              state.extensionEpisodeResults[episodeIndex],
+              state.extensionEpisodeResults[playlistIndex],
             );
             if (!shouldKeepDialog && context.mounted) {
               emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: false));
@@ -591,7 +594,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         selectedExtension,
       );
       if (episodeResults.isNotEmpty) {
-        List<JSEpisode> sortedEpisodes = episodeResults.sorted((animeEpisode1, animeEpisode2) => animeEpisode1.getEpisode_number().toInt() - animeEpisode2.getEpisode_number().toInt());
+        List<JSEpisode> sortedEpisodes = episodeResults.sorted((animeEpisode1, animeEpisode2) => animeEpisode1.getEpisode_number().compareTo(animeEpisode2.getEpisode_number()));
         emit(state.copyWith(extensionEpisodeResults: sortedEpisodes));
         _selectedEpisodesNotifier.updateSelectedJSEpisodes(sortedEpisodes);
         return true;
