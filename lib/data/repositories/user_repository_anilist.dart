@@ -1,4 +1,5 @@
 // External dependencies
+import 'dart:async';
 import 'dart:io';
 import 'package:hive_ce/hive.dart';
 import 'package:logger/logger.dart';
@@ -37,7 +38,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   final UserNotifier _newUserNotifier;
   final UserNotifier _loggedUserNotifier;
   late Box<AnilistUserModel> _anilistUsersBox;
-  late HttpServer _server;
+  _AnilistLoginSession? _loginSession;
 
   UserRepositoryAnilist(this._newUserNotifier, this._loggedUserNotifier);
 
@@ -49,25 +50,49 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   @override
   Future<void> attemptCreateUser() async {
+    // Reserve ownership before binding so concurrent attempts reuse this session.
+    if (_loginSession != null) return;
+    final session = _AnilistLoginSession();
+    _loginSession = session;
     _logger.i("Creating Anilist user");
+    session.server = shelfio.serve(
+      (request) => _handleLoginRequest(request, session),
+      'localhost',
+      9999,
+    );
     try {
-      _logger.d("Opening Anilist login server at http://localhost:9999");
-      _server = await shelfio.serve(_handleLoginRequest, 'localhost', 9999, shared: true);
-    } catch (e, stackTrace) {
-      _logger.e("Error attempting to open server: $e", stackTrace: stackTrace);
-      if (await canLaunchUrl(Uri.parse(config.anilistAuthUrl))) {
-        await launchUrl(Uri.parse(config.anilistAuthUrl));
-      } else {
-        _logger.e("Could not launch ${config.anilistAuthUrl}");
+      await session.server;
+      if (session.cancelled) return;
+      session.timeout = Timer(const Duration(minutes: 5), () async {
+        _logger.i("Anilist authorization timed out");
+        await _closeLoginSession(session);
+      });
+      _logger.i("Launching Anilist authorization URL");
+      final loginUri = Uri.parse(config.anilistAuthUrl);
+      if (!await canLaunchUrl(loginUri)) {
+        throw StateError('Could not launch Anilist authorization URL');
       }
-      rethrow;
+      if (session.cancelled) return;
+      if (!await launchUrl(loginUri)) {
+        throw StateError('Could not launch Anilist authorization URL');
+      }
+    } catch (_, stackTrace) {
+      await _closeLoginSession(session);
+      _logger.e("Could not start Anilist authorization", stackTrace: stackTrace);
+      throw StateError('Could not start Anilist authorization');
     }
+  }
 
-    _logger.i("Launching Anilist authorization URL: ${config.anilistAuthUrl}");
-    if (await canLaunchUrl(Uri.parse(config.anilistAuthUrl))) {
-      await launchUrl(Uri.parse(config.anilistAuthUrl));
-    } else {
-      _logger.e("Could not launch ${config.anilistAuthUrl}");
+  Future<void> cancelCreateUser() async {
+    final session = _loginSession;
+    if (session != null) await _closeLoginSession(session);
+  }
+
+  Future<void> _closeLoginSession(_AnilistLoginSession session, {bool force = true}) async {
+    try {
+      await session.close(force: force);
+    } finally {
+      if (identical(_loginSession, session)) _loginSession = null;
     }
   }
 
@@ -199,11 +224,15 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
     );
   }
 
-  Future<shelf.Response> _handleLoginRequest(shelf.Request request) async {
+  Future<shelf.Response> _handleLoginRequest(shelf.Request request, _AnilistLoginSession session) async {
+    if (session.cancelled || session.handlingCallback) {
+      return shelf.Response.badRequest(body: 'Authorization is no longer pending.');
+    }
+    session.handlingCallback = true;
     try {
       _logger.i("Handling login request from Anilist at ${request.requestedUri.path}");
       String accessCode = request.requestedUri.queryParameters['code']!;
-      await _createUser(accessCode);
+      await _createUser(accessCode, session);
       return shelf.Response.ok('Authorization successful. You can close this window.');
     } catch (e, stackTrace) {
       _logger.e("Error Handling login request: $e", stackTrace: stackTrace);
@@ -212,13 +241,15 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
       );
     } finally {
       _logger.i("Closing Anilist login server");
-      _server.close();
+      await _closeLoginSession(session, force: false);
     }
   }
 
-  Future<void> _createUser(String accessCode) async {
+  Future<void> _createUser(String accessCode, _AnilistLoginSession session) async {
     _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    if (session.cancelled) return;
     ApiResponse<AuthTokenEntity> authToken = await getAuthToken(accessCode);
+    if (session.cancelled) return;
     Map<String, String> graphQlHeaders = {"Authorization": "Bearer ${authToken.data.accessToken}"};
     ApiGraphQLResponse<ViewerGraphqlEntity> viewerDto = await _anilistGraphQLService
         .query<ViewerGraphqlEntity>(
@@ -226,6 +257,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
           fromJson: ViewerGraphqlEntity.fromJson,
           headers: graphQlHeaders,
         );
+    if (session.cancelled) return;
     throwIfGraphQlError(viewerDto);
     AnilistUserModel newAnilistUser = AnilistUserModel(
       id: viewerDto.data.viewer.id.toString(),
@@ -238,6 +270,31 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
       refreshToken: authToken.data.refreshToken,
     );
     await updateUserInfo(newAnilistUser);
-    _newUserNotifier.updateUser(newAnilistUser);
+    if (!session.cancelled) _newUserNotifier.updateUser(newAnilistUser);
+  }
+}
+
+class _AnilistLoginSession {
+  late final Future<HttpServer> server;
+  Timer? timeout;
+  bool cancelled = false;
+  bool handlingCallback = false;
+  Future<void>? _closing;
+
+  Future<void> close({bool force = true}) {
+    cancelled = true;
+    timeout?.cancel();
+    return _closing ??= _closeServer(force);
+  }
+
+  Future<void> _closeServer(bool force) async {
+    final HttpServer boundServer;
+    try {
+      boundServer = await server;
+    } catch (_) {
+      // A failed bind has no listener to close; the caller reports the failure.
+      return;
+    }
+    await boundServer.close(force: force);
   }
 }
