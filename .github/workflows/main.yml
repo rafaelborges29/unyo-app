@@ -14,7 +14,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.5'
+          flutter-version: '3.38.1'
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.1'
@@ -100,7 +100,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.5'
+          flutter-version: '3.38.1'
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.1'
@@ -151,7 +151,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          flutter-version: '3.19.5'
+          flutter-version: '3.38.1'
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.1'
