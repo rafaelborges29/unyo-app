@@ -171,7 +171,6 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     }
     _videoService = VideoService(
       video: videoInfo.currentVideo,
-      alternativeVideos: videoInfo.alternativeVideos,
       videoIndex: videoInfo.videoIndex,
       episodeIndex: videoInfo.playlistIndex,
       onErrorCallback: _handleVideoError,
@@ -181,17 +180,21 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     emit(state.copyWith(videoInfo: videoInfo, isLoading: false));
   }
 
-  Future<void> _selectNewEpisode(VideoInfo videoInfo) async {
-    _logger.i("Selecting new episode: Index ${videoInfo.playlistIndex}");
-    await _videoService.changeVideo(
+  Future<void> _selectVideo(VideoInfo videoInfo, int requestId, {Duration? resumePosition}) async {
+    _logger.i("Selecting video for episode index ${videoInfo.playlistIndex}");
+    final selected = await _videoService.changeVideo(
       video: videoInfo.currentVideo,
-      alternativeVideos: videoInfo.alternativeVideos,
       videoIndex: videoInfo.videoIndex,
       episodeIndex: videoInfo.playlistIndex,
+      requestId: requestId,
+      resumePosition: resumePosition,
     );
+    if (!selected || isClosed || !_videoService.isCurrentPlaybackRequest(requestId)) return;
     emit(state.copyWith(videoInfo: videoInfo));
-    _initVideoMetadata(videoInfo);
-    _logger.i("VideoService updated for new episode.");
+    if (resumePosition == null) {
+      _initVideoMetadata(videoInfo);
+    }
+    _logger.i("VideoService updated for selected video.");
   }
 
   Future<void> _getAniskipSkipTimes(Anime selectedAnime, VideoInfo videoInfo) async {
@@ -386,6 +389,8 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   Future<void> navigateToEpisode(int episodeIndex) async {
+    if (isClosed) return;
+    final requestId = _videoService.beginPlaybackRequest();
     try {
       _logger.i("Navigating to episode index: $episodeIndex");
       _videoService.resetService();
@@ -393,23 +398,41 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
       List<ext.Video> alternativeVideos = await _getVideosFromSelectedExtension(
         state.selectedExtension,
         state.extensionEpisodeResults[episodeIndex],
+        requestId,
       );
+      if (isClosed || !_videoService.isCurrentPlaybackRequest(requestId)) return;
       VideoInfo videoInfo = VideoInfoModel(
         currentVideo: alternativeVideos[currentVideoInfo.videoIndex],
         alternativeVideos: alternativeVideos,
         videoIndex: currentVideoInfo.videoIndex,
         playlistIndex: episodeIndex,
       );
-      await _selectNewEpisode(videoInfo);
+      await _selectVideo(videoInfo, requestId);
     } catch (e, stackTrace) {
+      if (isClosed || !_videoService.isCurrentPlaybackRequest(requestId)) return;
       logger.e("Error navigating to episode $e", stackTrace: stackTrace);
       handleError("Error navigating to episode", stackTrace: stackTrace);
     }
   }
 
+  Future<void> selectVideoServer(int videoIndex) async {
+    if (isClosed) return;
+    final currentVideoInfo = state.videoInfo;
+    if (videoIndex < 0 || videoIndex >= currentVideoInfo.alternativeVideos.length) return;
+    final requestId = _videoService.beginPlaybackRequest();
+    final videoInfo = VideoInfoModel(
+      currentVideo: currentVideoInfo.alternativeVideos[videoIndex],
+      alternativeVideos: currentVideoInfo.alternativeVideos,
+      videoIndex: videoIndex,
+      playlistIndex: currentVideoInfo.playlistIndex,
+    );
+    await _selectVideo(videoInfo, requestId, resumePosition: _videoService.position);
+  }
+
   Future<List<ext.Video>> _getVideosFromSelectedExtension(
     Extension? selectedExtension,
     JSEpisode? selectedJSEpisode,
+    int requestId,
   ) async {
     if (selectedExtension == null) {
       _logger.w("No extension selected to fetch videos.");
@@ -436,6 +459,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         selectedJSEpisode,
         selectedExtension,
       );
+      if (isClosed || !_videoService.isCurrentPlaybackRequest(requestId)) return [];
       if (videoResults.isNotEmpty) {
         return videoResults.map((jVideo) => ext.Video.fromJVideo(jVideo)).toList();
       } else {
@@ -448,6 +472,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         return [];
       }
     } catch (e, stackTrace) {
+      if (isClosed || !_videoService.isCurrentPlaybackRequest(requestId)) return [];
       handleError("Error fetching Videos Info from selected extension: $e", stackTrace: stackTrace);
       return [];
     }
