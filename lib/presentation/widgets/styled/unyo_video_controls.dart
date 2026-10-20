@@ -70,6 +70,7 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
           setState(() {});
         }
       });
+      _hideControlsTimer.cancel();
       _hideControlsTimer = Timer(const Duration(seconds: 4), () {
         if (mounted && _videoService.isPlaying) {
           _controlsVisible = false;
@@ -106,6 +107,7 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
   void dispose() {
     _refreshTimer.cancel();
     _hideControlsTimer.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -297,6 +299,7 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
                                           onChangeEnd: (value) {
                                             _isDragging = false;
                                             _videoService.seekTo(Duration(milliseconds: value.toInt()));
+                                            _hideControlsTimer.cancel();
                                             _hideControlsTimer = Timer(const Duration(seconds: 4), () {
                                               if (mounted && _videoService.isPlaying) {
                                                 _controlsVisible = false;
