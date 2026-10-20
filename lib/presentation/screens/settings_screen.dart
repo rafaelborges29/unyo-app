@@ -166,11 +166,15 @@ class _SettingsViewState extends State<_SettingsView> with TickerProviderStateMi
                           icon: Icons.image_search_rounded,
                           label: "Select a service",
                           defaultValue:
-                              TextUtils.capitalize(state.loggedUser.settings.service.name),
+                              state.loggedUser.settings.service == Service.mal
+                                  ? 'MyAnimeList'
+                                  : TextUtils.capitalize(state.loggedUser.settings.service.name),
                           children:
                               Service.values
                                   .map(
-                                    (service) => TextUtils.capitalize(service.name),
+                                    (service) => service == Service.mal
+                                        ? 'MyAnimeList'
+                                        : TextUtils.capitalize(service.name),
                                   )
                                   .toList(),
                           onPressed: context.read<SettingsCubit>().updateMediaMetadataService,
