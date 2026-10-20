@@ -199,10 +199,10 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     pushRouteEffect(path: "/video");
   }
 
-  Future<void> selectAnimeExtension(String? selectedAnimeExtensionName) async {
+  Future<void> selectAnimeExtension(String? selectedAnimeExtensionId) async {
     Extension? selectedExtension =
         state.installedExtensions
-            .where((extension) => selectedAnimeExtensionName == extension.name)
+            .where((extension) => selectedAnimeExtensionId == '${extension.type}:${extension.pkg}')
             .firstOrNull;
     if (selectedExtension != null) {
       emit(state.copyWith(selectedExtension: selectedExtension));
@@ -221,7 +221,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       }
       _getAnimeInfoFromSelectedExtension(selectedExtension);
     } else {
-      _logger.w("Selected extension $selectedAnimeExtensionName not found among installed extensions.");
+      _logger.w("Selected extension $selectedAnimeExtensionId not found among installed extensions.");
       showSnackBarEffect(
         "Extension Not Found",
         message: "The selected extension is not installed.",
@@ -723,7 +723,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
           Extension? selectedExtension = userSettings.mediaExtensionConfigs[selectedAnime.id.toString()];
           if (selectedExtension != null) {
-            selectAnimeExtension(selectedExtension.name);
+            selectAnimeExtension('${selectedExtension.type}:${selectedExtension.pkg}');
           }
         case LocalUserModel localUserModel:
       }

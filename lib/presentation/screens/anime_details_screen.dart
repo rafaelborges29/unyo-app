@@ -314,13 +314,18 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 22.w),
                               child: UnyoDropdown(
-                                onPressed:
-                                    (selectedExtensionName) => context
-                                        .read<AnimeDetailsCubit>()
-                                        .selectAnimeExtension(selectedExtensionName),
-                                selectedValue: state.selectedExtension?.name,
+                                onPressed: context.read<AnimeDetailsCubit>().selectAnimeExtension,
+                                selectedValue: state.selectedExtension == null
+                                    ? null
+                                    : '${state.selectedExtension!.type}:${state.selectedExtension!.pkg}',
                                 label: "Select Extension",
-                                children: [...state.installedExtensions.map((extension) => extension.name)],
+                                children: [
+                                  ...state.installedExtensions.map((extension) => '${extension.type}:${extension.pkg}'),
+                                ],
+                                labels: {
+                                  for (final extension in state.installedExtensions)
+                                    '${extension.type}:${extension.pkg}': '${extension.name} (${extension.lang}) · ${extension.pkg}',
+                                },
                               ),
                             ),
                           ),
