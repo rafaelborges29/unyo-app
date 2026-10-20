@@ -467,10 +467,17 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         timer.cancel();
         // TODO add a setting for this percentage value
         final updateMediaEntryTriggerDuration = Duration(seconds: (_videoService.duration.inSeconds * 0.8).toInt());
+        bool isUpdatingMediaEntry = false;
         _updateMediaEntryTimer = Timer.periodic(const Duration(seconds: 30), (updateTimer) async {
-          if (_videoService.position >= updateMediaEntryTriggerDuration) {
-            _markEpisodeAsWatched();
-            updateTimer.cancel();
+          if (!isUpdatingMediaEntry && _videoService.position >= updateMediaEntryTriggerDuration) {
+            isUpdatingMediaEntry = true;
+            try {
+              if (await _markEpisodeAsWatched()) {
+                updateTimer.cancel();
+              }
+            } finally {
+              isUpdatingMediaEntry = false;
+            }
           }
         });
         return;
@@ -482,10 +489,10 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     });
   }
 
-  Future<void> _markEpisodeAsWatched() async {
+  Future<bool> _markEpisodeAsWatched() async {
     if (state.mediaListEntry.progress >= state.videoInfo.playlistIndex + 1) {
       _logger.d("Episode ${state.videoInfo.playlistIndex + 1} is already marked as watched. No update needed.");
-      return;
+      return true;
     }
     _logger.i("Marking episode ${state.videoInfo.playlistIndex + 1} as watched in media list.");
     try {
@@ -499,13 +506,19 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         state.selectedAnime,
         state.loggedUser,
       );
+      if (isClosed) return true;
       emit(state.copyWith(mediaListEntry: savedMediaListEntry));
       _reloadNotifier.emitReload(ReloadType.videoMediaListEntryUpdated);
     } on HttpServerException catch (e, stackTrace) {
+      if (isClosed) return false;
       handleError("Error updating Anime Entry:", responseBody: e.message, stackTrace: stackTrace);
+      return false;
     } catch (e, stackTrace) {
+      if (isClosed) return false;
       handleError("Error updating Anime Entry: $e", stackTrace: stackTrace);
+      return false;
     }
     showSnackBarEffect("Episode marked as complete!", message: "This episode has been marked as completed", contentType: ContentType.success);
+    return true;
   }
 }
