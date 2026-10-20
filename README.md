@@ -61,27 +61,6 @@ If you are on **Linux**, you can:
 
 When setting up Unyo, make sure your AniList profile is set to either public or semi-public. Currently, Unyo won't be able to pull your anime and manga lists if your account is set to private.
 
-## Torrent service
-
-The bundled TorrServer control API binds to `127.0.0.1` on a free port chosen for
-that application instance. Unyo creates fresh HTTP Basic credentials in a private
-session directory and authenticates its control requests. It waits for the child
-server to enforce authentication before using it. Stopping the service terminates
-only that instance's child and removes its session directory; Unyo does not send
-shutdown or wipe requests to an existing service on port 8090. Torrent playback
-continues to use the bundled server's local `/play` endpoint.
-
-With the Flutter SDK and sibling `unyo-lib` dependency available, run the focused
-native-server regression tests with:
-
-```sh
-flutter test test/core/services/torrent/torrent_service_test.dart
-```
-
-These tests launch the bundled binary in disposable directories, check listener
-isolation and control authentication, and verify that instances cannot control
-one another. Run them on the desktop platform being validated.
-
 ## Available Extensions
 
 ### Remote Extensions
