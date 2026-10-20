@@ -160,22 +160,43 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
 
   @override
   Future<Set<Extension>> getInstalledAnimeExtensions(User user) async {
-    _aniyomiExtensionsBox = await Hive.openBox<Extension>('aniyomiExtensions');
-    return _aniyomiExtensionsBox.values.where((extension) => extension.type == ExtensionType.ANIYOMI).toSet();
+    return _getInstalledExtensions(ExtensionType.ANIYOMI);
   }
 
   @override
   Future<Set<Extension>> getInstalledMangaExtensions(User user) async {
+    return _getInstalledExtensions(ExtensionType.TACHIYOMI);
+  }
+
+  Future<Set<Extension>> _getInstalledExtensions(String type) async {
     _aniyomiExtensionsBox = await Hive.openBox<Extension>('aniyomiExtensions');
-    return _aniyomiExtensionsBox.values
-        .where((extension) => extension.type == ExtensionType.TACHIYOMI)
-        .toSet();
+    final installed = <String, Extension>{};
+    // Legacy name/version keys remain readable until the package is replaced or removed.
+    for (final extension in _aniyomiExtensionsBox.values.where((extension) => extension.type == type)) {
+      final key = _extensionKey(extension);
+      final existing = installed[key];
+      if (existing == null || _compareVersions(extension.version, existing.version) > 0) {
+        installed[key] = extension;
+      }
+    }
+    return installed.values.toSet();
+  }
+
+  String _extensionKey(Extension extension) => '${extension.type}:${extension.pkg}';
+
+  List<dynamic> _storedExtensionKeys(Extension extension) {
+    return _aniyomiExtensionsBox.keys.where((key) {
+      final stored = _aniyomiExtensionsBox.get(key);
+      return stored != null && stored.type == extension.type && stored.pkg == extension.pkg;
+    }).toList();
   }
 
   @override
   Future<void> addExtension(Extension extension) async {
     _aniyomiExtensionsBox = await Hive.openBox<Extension>('aniyomiExtensions');
-    await _aniyomiExtensionsBox.put('${extension.name}-${extension.version}', extension);
+    final key = _extensionKey(extension);
+    await _aniyomiExtensionsBox.put(key, extension);
+    await _aniyomiExtensionsBox.deleteAll(_storedExtensionKeys(extension).where((storedKey) => storedKey != key));
     if (extension.type == ExtensionType.ANIYOMI) {
       _aniyomiBridge.loadAnimeExtension(extension.apk, extension.pkg);
     } else if (extension.type == ExtensionType.TACHIYOMI) {
@@ -189,7 +210,7 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
   @override
   Future<void> removeExtension(Extension extension) async {
     _aniyomiExtensionsBox = await Hive.openBox<Extension>('aniyomiExtensions');
-    await _aniyomiExtensionsBox.delete('${extension.name}-${extension.version}');
+    await _aniyomiExtensionsBox.deleteAll(_storedExtensionKeys(extension));
     if (extension.type == ExtensionType.ANIYOMI) {
       _aniyomiBridge.unloadAnimeExtension(extension.pkg);
     } else if (extension.type == ExtensionType.TACHIYOMI) {
