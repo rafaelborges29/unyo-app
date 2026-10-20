@@ -55,7 +55,7 @@ class _RootScreenState extends State<RootScreen> with WindowListener {
                     end: Alignment.bottomRight,
                     colors: [
                       Colors.transparent,
-                      ColorScheme.of(context).primary.withValues(alpha: 140),
+                      ColorScheme.of(context).primary.withValues(alpha: 140 / 255),
                     ],
                   ),
                 ),
@@ -68,7 +68,7 @@ class _RootScreenState extends State<RootScreen> with WindowListener {
                       center: Alignment.topLeft,
                       radius: 0.7,
                       colors: [
-                        ColorScheme.of(context).primary.withValues(alpha: 140),
+                        ColorScheme.of(context).primary.withValues(alpha: 140 / 255),
                         Colors.transparent,
                       ],
                     ),
