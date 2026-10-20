@@ -87,6 +87,10 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
       ];
     }
     List<Widget> episodeButtons = [];
+    final canOpenEpisode = state.selectedExtension != null &&
+        state.selectedAnimeResultIndex >= 0 &&
+        state.selectedAnimeResultIndex < state.extensionAnimeResults.length &&
+        !state.animeServerDialogLoading;
     for (int i = 0; i < numEpisodes; i++) {
       episodeButtons.add(
         UnyoEpisodeButton(
@@ -108,7 +112,9 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                   ? (state.selectedAnime.nextAiringEpisode.episode - 1)
                   : numEpisodes,
           showDivider: i != 0,
-          onPressed: () => context.read<AnimeDetailsCubit>().openAnimeServerSelectionDrawer(context, i),
+          onPressed: canOpenEpisode
+              ? () => context.read<AnimeDetailsCubit>().openAnimeServerSelectionDrawer(context, i)
+              : null,
         ),
       );
     }

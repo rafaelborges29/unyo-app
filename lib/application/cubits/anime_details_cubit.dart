@@ -235,42 +235,55 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> openAnimeServerSelectionDrawer(BuildContext context, int episodeIndex) async {
-    if (state.animeServerDialogLoading) return;
+    if (isClosed || !context.mounted || state.animeServerDialogLoading) return;
+    final selectedExtension = state.selectedExtension;
+    final selectedAnimeResultIndex = state.selectedAnimeResultIndex;
+    if (selectedExtension == null ||
+        selectedAnimeResultIndex < 0 ||
+        selectedAnimeResultIndex >= state.extensionAnimeResults.length) return;
+    final selectedAnimeResult = state.extensionAnimeResults[selectedAnimeResultIndex];
     emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: true, extensionVideoResults: []));
-    // TODO - You may not want to select the found index (selectedAnimeResultIndex) on extensionAnimeResults
-    bool canOpenDrawer = await _getEpisodesFromSelectedExtension(
-      state.selectedExtension,
-      state.extensionAnimeResults[state.selectedAnimeResultIndex],
-    );
-    if (!canOpenDrawer) {
-      emit(state.copyWith(animeServerDialogLoading: false));
-     return;
-    }
-    showDrawerDialogEffect(
+    bool drawerRequested = false;
+    try {
+      bool canOpenDrawer = await _getEpisodesFromSelectedExtension(selectedExtension, selectedAnimeResult);
+      if (!canOpenDrawer || isClosed || !context.mounted) return;
+      showDrawerDialogEffect(
         drawerDialog: AnimeServerSelectionDrawer(
           cubit: this,
           episodeIndex: episodeIndex,
           onOpen: () async {
-            if (episodeIndex >= state.extensionEpisodeResults.length) {
-              _logger.w("Episode index $episodeIndex is out of bounds for extension episode results.");
-              showSnackBarEffect("${state.selectedExtension?.name} Error", message: "Only ${state.extensionEpisodeResults.length} episodes were found", contentType: ContentType.warning);
+            try {
+              if (isClosed || !context.mounted) return false;
+              if (episodeIndex < 0 || episodeIndex >= state.extensionEpisodeResults.length) {
+                _logger.w("Episode index $episodeIndex is out of bounds for extension episode results.");
+                showSnackBarEffect("${state.selectedExtension?.name} Error", message: "Only ${state.extensionEpisodeResults.length} episodes were found", contentType: ContentType.warning);
+                return false;
+              }
+              bool shouldKeepDialog = await _getVideosFromSelectedExtension(
+                state.selectedExtension,
+                state.extensionEpisodeResults[episodeIndex],
+              );
+              if (!shouldKeepDialog || isClosed || !context.mounted) return false;
+              emit(state.copyWith(animeServerDialogReady: true));
+              return true;
+            } catch (e, stackTrace) {
+              if (!isClosed) handleError("Error opening Anime Server Selection: $e", stackTrace: stackTrace);
               return false;
+            } finally {
+              if (!isClosed) emit(state.copyWith(animeServerDialogLoading: false));
             }
-            bool shouldKeepDialog = await _getVideosFromSelectedExtension(
-              state.selectedExtension,
-              state.extensionEpisodeResults[episodeIndex],
-            );
-            if (!shouldKeepDialog && context.mounted) {
-              emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: false));
-              return false;
-            }
-            emit(state.copyWith(animeServerDialogReady: true, animeServerDialogLoading: false));
-            return true;
           },
         ),
         backgroundColor: Colors.black.withValues(alpha: 0.55),
-        startPosition: AxisDirection.down
-    );
+        startPosition: AxisDirection.down,
+      );
+      drawerRequested = true;
+    } catch (e, stackTrace) {
+      if (!isClosed) handleError("Error opening Anime Server Selection: $e", stackTrace: stackTrace);
+    } finally {
+      // The drawer callback owns loading once its effect has been requested.
+      if (!drawerRequested && !isClosed) emit(state.copyWith(animeServerDialogLoading: false));
+    }
   }
 
   Future<void> updateMediaListEntry(BuildContext context) async {
