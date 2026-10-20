@@ -148,11 +148,21 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
   }
 
   void setUsersTheme(User user) async {
-    List<Color> wallpaperColors = [];
+    List<Color> wallpaperColors = [
+      _themeService.defaultPrimaryColor,
+      _themeService.defaultSecondaryColor,
+      _themeService.defaultTertiaryColor,
+    ];
     if (user.settings.useWallpaperAsThemeColor) {
       switch (user) {
         case AnilistUserModel anilistUserModel:
           _logger.d("Getting anilist user's theme");
+          final bannerUri = Uri.tryParse(anilistUserModel.bannerImage);
+          if (bannerUri == null ||
+              (bannerUri.scheme != 'https' && bannerUri.scheme != 'http') ||
+              bannerUri.host.isEmpty) {
+            break;
+          }
           wallpaperColors = await _colorImageService
               .getColorsFromPalleteGenerator(
             NetworkImage(anilistUserModel.bannerImage),
