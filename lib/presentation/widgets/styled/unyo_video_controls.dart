@@ -386,8 +386,7 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
                                           tooltip: "Select Video Server",
                                           icon: const Icon(Icons.video_settings_rounded, size: 27),
                                           onSelected: (int index) {
-                                            _videoService.swapVideoUrl(index);
-                                            setState(() {});
+                                            widget.videoCubit.selectVideoServer(index);
                                           },
                                           itemBuilder: (BuildContext context) => state
                                               .videoInfo
@@ -406,7 +405,7 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
                                                   ),
-                                                  _videoService.videoIndex == index
+                                                  state.videoInfo.videoIndex == index
                                                       ? const Padding(
                                                         padding: EdgeInsets.only(left: 12.0),
                                                         child: Icon(Icons.check_rounded, size: 16),

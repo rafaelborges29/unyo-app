@@ -26,7 +26,6 @@ class VideoService {
   final Set<String> _torrentHashes = {};
 
   ext.Video _video;
-  List<ext.Video> _alternativeVideos;
   int _videoIndex;
   int _episodeIndex; // This will be used for getting the correct video out of a playlist from a magnet / torrent
   final void Function(String) _onErrorCallback;
@@ -43,65 +42,93 @@ class VideoService {
   bool _isBuffering = true;
   bool _isLoading = false;
   bool _isDisposed = false;
+  int _playbackRequestId = 0;
+  Future<void> _pendingPlayerChange = Future<void>.value();
   static const mdk.SeekFlag _seekFlags = mdk.SeekFlag(
     mdk.SeekFlag.fromStart | mdk.SeekFlag.inCache | mdk.SeekFlag.fast,
   );
 
   VideoService({
     required ext.Video video,
-    required List<ext.Video> alternativeVideos,
     required int videoIndex,
     required int episodeIndex,
     required void Function(String) onErrorCallback,
   }) : _episodeIndex = episodeIndex,
        _videoIndex = videoIndex,
        _video = video,
-       _alternativeVideos = alternativeVideos,
        _onErrorCallback = onErrorCallback {
     _player = mdk.Player();
     _configureDecoder();
     _configurePlayer();
     _setPlayerHttpHeaders(_video.headers);
+    _player.onMediaStatus(_onMediaStatusInit);
+    _player.loop = 0;
     _initAsync();
   }
 
   /// Inits asynchronous properties and sets player media
   Future<void> _initAsync() async {
+    final requestId = _playbackRequestId;
+    final video = _video;
+    final videoIndex = _videoIndex;
+    final episodeIndex = _episodeIndex;
     _initialFullscreen = await windowManager.isFullScreen();
+    if (_isDisposed) return;
     _isFullscreen = _initialFullscreen;
-    _player.onMediaStatus(_onMediaStatusInit);
-    try {
-      final resolvedUrl = await _resolveVideoUrl(_video.videoUrl);
-      _player.media = resolvedUrl;
-      await _player.prepare();
-    } catch (e, st) {
-      _logger.e("Failed to resolve video URL in _initAsync", error: e, stackTrace: st);
-      _onErrorCallback(e.toString());
-    }
-    _player.loop = 0;
+    await changeVideo(video: video, videoIndex: videoIndex, episodeIndex: episodeIndex, requestId: requestId);
   }
 
-  Future<void> changeVideo({
+  // Shared by episode extraction and server selection, including initialization.
+  int beginPlaybackRequest() => ++_playbackRequestId;
+
+  bool isCurrentPlaybackRequest(int requestId) => !_isDisposed && requestId == _playbackRequestId;
+
+  Future<bool> changeVideo({
     required ext.Video video,
-    required List<ext.Video> alternativeVideos,
     required int videoIndex,
     required int episodeIndex,
+    required int requestId,
+    Duration? resumePosition,
   }) async {
-    _attemptDisposeTorrent();
-    _video = video;
-    _alternativeVideos = alternativeVideos;
-    _videoIndex = videoIndex;
-    _episodeIndex = episodeIndex;
+    if (!isCurrentPlaybackRequest(requestId)) return false;
+    if (resumePosition == null) {
+      _attemptDisposeTorrent();
+    } else {
+      pause();
+    }
     _isVideoReady = false;
     _isBuffering = true;
     try {
-      final resolvedUrl = await _resolveVideoUrl(_video.videoUrl);
-      _player.media = resolvedUrl;
-      await _player.prepare();
+      final resolvedUrl = await _resolveVideoUrl(video.videoUrl, episodeIndex);
+      if (!isCurrentPlaybackRequest(requestId)) return false;
+      // fvp keeps one prepare completer, so native player changes cannot overlap.
+      final previousChange = _pendingPlayerChange;
+      final completed = Completer<void>();
+      _pendingPlayerChange = completed.future;
+      try {
+        await previousChange;
+        if (!isCurrentPlaybackRequest(requestId)) return false;
+        _video = video;
+        _videoIndex = videoIndex;
+        _episodeIndex = episodeIndex;
+        _player.media = resolvedUrl;
+        final preparedPosition = await _player.prepare();
+        if (!isCurrentPlaybackRequest(requestId) || preparedPosition < 0) return false;
+        if (resumePosition != null) {
+          await _player.seek(position: resumePosition.inMilliseconds, flags: _seekFlags);
+          if (!isCurrentPlaybackRequest(requestId)) return false;
+          play();
+        }
+      } finally {
+        completed.complete();
+      }
     } catch (e, st) {
+      if (!isCurrentPlaybackRequest(requestId)) return false;
       _logger.e("Failed to resolve video URL on change", error: e, stackTrace: st);
       _onErrorCallback(e.toString());
+      return false;
     }
+    return true;
   }
 
   // Getters
@@ -211,30 +238,6 @@ class VideoService {
     return true;
   }
 
-  Future<void> swapVideoUrl(int index) async {
-    if (index < 0 || index >= _alternativeVideos.length) {
-      return;
-    }
-    pause();
-    ext.Video video = _alternativeVideos[index];
-    _videoIndex = index;
-    _video = video;
-    final position = this.position;
-    _isVideoReady = false;
-    _isBuffering = true;
-    try {
-      final resolvedUrl = await _resolveVideoUrl(video.videoUrl);
-      _player.media = resolvedUrl;
-      await _player.prepare();
-    } catch (e, st) {
-      _logger.e("Failed to resolve video URL on swap", error: e, stackTrace: st);
-      _onErrorCallback(e.toString());
-      return;
-    }
-    await _player.seek(position: position.inMilliseconds, flags: _seekFlags);
-    play();
-  }
-
   bool setSubtitle(int subtitleIndex) {
     if (subtitleIndex < 0 || subtitleIndex >= subtitleTracks.length) {
       _currentSubtitleTrack = null;
@@ -288,7 +291,7 @@ class VideoService {
   }
 
   // Magnet / Torrent resolution
-  Future<String> _resolveVideoUrl(String url) async {
+  Future<String> _resolveVideoUrl(String url, int episodeIndex) async {
     if (!url.toLowerCase().startsWith("magnet:")) {
       return url;
     }
@@ -297,11 +300,11 @@ class VideoService {
     final status = await _torrentService.addTorrent(cleanMagnet);
     _torrentHashes.add(status.hash);
     if (status.stat >= 2 && status.fileStats.isNotEmpty) {
-      final fileIndex = _selectFileIndex(status.fileStats, _episodeIndex);
+      final fileIndex = _selectFileIndex(status.fileStats, episodeIndex);
       return _torrentService.getStreamUrl(hash, fileIndex);
     }
-    _logger.w("No metadata available, streaming with fallback index $_episodeIndex");
-    return _torrentService.getStreamUrl(hash, _episodeIndex);
+    _logger.w("No metadata available, streaming with fallback index $episodeIndex");
+    return _torrentService.getStreamUrl(hash, episodeIndex);
   }
 
   int _selectFileIndex(List<TorrentFileStat> files, int episodeIndex) {
