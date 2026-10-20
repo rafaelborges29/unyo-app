@@ -72,6 +72,11 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   bool _videoServiceInitialized = false;
   Timer? _videoReadyTimer;
   Timer? _updateMediaEntryTimer;
+  Timer? _aniskipTimer;
+  Timer? _castMediaTimer;
+  StreamSubscription<CastSessionState>? _castStateSubscription;
+  StreamSubscription<Map<String, dynamic>>? _castMessageSubscription;
+  CastSession? _castSession;
 
   VideoCubit(
     this._loggedUserNotifier,
@@ -119,6 +124,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
       _videoService.dispose();
     }
     _loggedUserSubscription.cancel();
+    _videoInfoSubscription.cancel();
     _selectedAnimeSubscription.cancel();
     _episodeInfoSubscription.cancel();
     _mediaListEntrySubscription.cancel();
@@ -126,6 +132,10 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
     _selectedEpisodesSubscription.cancel();
     _videoReadyTimer?.cancel();
     _updateMediaEntryTimer?.cancel();
+    _aniskipTimer?.cancel();
+    _castMediaTimer?.cancel();
+    _castStateSubscription?.cancel();
+    _castMessageSubscription?.cancel();
     _logger.d("VideoCubit closed and subscriptions cancelled.");
     return super.close();
   }
@@ -160,7 +170,11 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   void _initVideoMetadata(VideoInfo videoInfo) {
-    Future.delayed(const Duration(seconds: 1), () => _getAniskipSkipTimes(state.selectedAnime, videoInfo));
+    _aniskipTimer?.cancel();
+    _aniskipTimer = Timer(const Duration(seconds: 1), () {
+      if (isClosed) return;
+      _getAniskipSkipTimes(state.selectedAnime, videoInfo);
+    });
     _triggerUserMediaEntryUpdate();
   }
 
@@ -189,25 +203,30 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
       videoIndex: videoInfo.videoIndex,
       episodeIndex: videoInfo.playlistIndex,
     );
+    if (isClosed) return;
     emit(state.copyWith(videoInfo: videoInfo));
     _initVideoMetadata(videoInfo);
     _logger.i("VideoService updated for new episode.");
   }
 
   Future<void> _getAniskipSkipTimes(Anime selectedAnime, VideoInfo videoInfo) async {
-    double formattedDuration = selectedAnime.duration > 0 ? selectedAnime.duration * 60 : 24 * 60;
-    ApiResponse<AniskipTimesEntity> aniskipResponse =
-      await _httpService.get(
-          "${config.aniskiBaseEndpoint}/v2/skip-times/${selectedAnime.idMal}/${videoInfo.playlistIndex + 1}?types=op&types=ed&episodeLength=$formattedDuration",
-          fromJson: AniskipTimesEntity.fromJson
+    try {
+      double formattedDuration = selectedAnime.duration > 0 ? selectedAnime.duration * 60 : 24 * 60;
+      ApiResponse<AniskipTimesEntity> aniskipResponse = await _httpService.get(
+        "${config.aniskiBaseEndpoint}/v2/skip-times/${selectedAnime.idMal}/${videoInfo.playlistIndex + 1}?types=op&types=ed&episodeLength=$formattedDuration",
+        fromJson: AniskipTimesEntity.fromJson,
       );
-    if (aniskipResponse.statusCode > 299 || aniskipResponse.data.statusCode > 299) {
-    _logger.e("Failed to fetch Aniskip times for malId: ${selectedAnime.idMal}. Status code: ${aniskipResponse.data.statusCode}. Message: ${aniskipResponse.data.message}");
-      return;
+      if (isClosed || videoInfo != state.videoInfo) return;
+      if (aniskipResponse.statusCode > 299 || aniskipResponse.data.statusCode > 299) {
+        _logger.e("Failed to fetch Aniskip times for malId: ${selectedAnime.idMal}. Status code: ${aniskipResponse.data.statusCode}. Message: ${aniskipResponse.data.message}");
+        return;
+      }
+      final openingSkipTimes = aniskipResponse.data.results.where((skip) => skip.skipType == "op").firstOrNull;
+      final endingSkipTimes = aniskipResponse.data.results.where((skip) => skip.skipType == "ed").firstOrNull;
+      emit(state.copyWith(openingSkipTimes: openingSkipTimes ?? AniskipTimesResults(), endingSkipTimes: endingSkipTimes ?? AniskipTimesResults()));
+    } catch (e, stackTrace) {
+      handleError("Error fetching AniSkip times: $e", stackTrace: stackTrace);
     }
-    final openingSkipTimes = aniskipResponse.data.results.where((skip) => skip.skipType == "op").firstOrNull;
-    final endingSkipTimes = aniskipResponse.data.results.where((skip) => skip.skipType == "ed").firstOrNull;
-    emit(state.copyWith(openingSkipTimes: openingSkipTimes ?? AniskipTimesResults(), endingSkipTimes: endingSkipTimes ?? AniskipTimesResults()));
   }
 
   String getSkipTimeText() {
@@ -241,42 +260,65 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
 
 
   Future<void> _getAvailableCastDevices() async {
-    List<CastDevice> availableCastDevices = await CastDiscoveryService().search();
-    emit(state.copyWith(availableCastDevices: availableCastDevices));
+    try {
+      List<CastDevice> availableCastDevices = await CastDiscoveryService().search();
+      if (isClosed) return;
+      emit(state.copyWith(availableCastDevices: availableCastDevices));
+    } catch (e, stackTrace) {
+      handleError("Error discovering Cast devices: $e", stackTrace: stackTrace);
+    }
   }
 
   Future<void> _connectAndPlayMediaOnCastDevice(CastDevice device) async {
-    final session = await CastSessionManager().startSession(device);
-
-    session.stateStream.listen((castState) {
-      if (castState == CastSessionState.connected) {
-        _logger.d("Connected to Cast device: ${device.name}");
-        showSnackBarEffect(
-          "Cast Connected",
-          message: "Connected to ${device.name}",
-          contentType: ContentType.success,
-        );
+    if (isClosed) return;
+    try {
+      final session = await CastSessionManager().startSession(device);
+      if (isClosed) {
+        await CastSessionManager().endSession(session.sessionId);
+        return;
       }
-    });
 
-    var messageIndex = 0;
-    session.messageStream.listen((message) {
-      messageIndex += 1;
-      _logger.d("Cast message received ($messageIndex): $message");
+      _castStateSubscription?.cancel();
+      _castMessageSubscription?.cancel();
+      _castMediaTimer?.cancel();
+      _castSession = session;
+      _castStateSubscription = session.stateStream.listen((castState) {
+        if (isClosed || _castSession != session) return;
+        if (castState == CastSessionState.connected) {
+          _logger.d("Connected to Cast device: ${device.name}");
+          showSnackBarEffect(
+            "Cast Connected",
+            message: "Connected to ${device.name}",
+            contentType: ContentType.success,
+          );
+        }
+      });
 
-      // After receiving the initial messages, send the media load command
-      if (messageIndex == 2) {
-        Future.delayed(const Duration(seconds: 2)).then((_) {
-          _sendMediaToCastSession(session);
-        });
-      }
-    });
+      var messageIndex = 0;
+      _castMessageSubscription = session.messageStream.listen((message) {
+        if (isClosed || _castSession != session) return;
+        messageIndex += 1;
+        _logger.d("Cast message received ($messageIndex): $message");
 
-    // Launch the default media receiver app
-    session.sendMessage(CastSession.kNamespaceReceiver, {
-      'type': 'LAUNCH',
-      'appId': 'CC1AD845', // Google's default media receiver app ID
-    });
+        // After receiving the initial messages, send the media load command
+        if (messageIndex == 2) {
+          _castMediaTimer = Timer(const Duration(seconds: 2), () {
+            if (isClosed || _castSession != session) return;
+            _sendMediaToCastSession(session);
+          });
+        }
+      }, onError: (Object error, StackTrace stackTrace) {
+        handleError("Cast session error: $error", stackTrace: stackTrace);
+      });
+
+      // Launch the default media receiver app
+      session.sendMessage(CastSession.kNamespaceReceiver, {
+        'type': 'LAUNCH',
+        'appId': 'CC1AD845', // Google's default media receiver app ID
+      });
+    } catch (e, stackTrace) {
+      handleError("Error connecting to Cast device: $e", stackTrace: stackTrace);
+    }
   }
 
   void _sendMediaToCastSession(CastSession session) {
@@ -394,6 +436,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         state.selectedExtension,
         state.extensionEpisodeResults[episodeIndex],
       );
+      if (isClosed) return;
       VideoInfo videoInfo = VideoInfoModel(
         currentVideo: alternativeVideos[currentVideoInfo.videoIndex],
         alternativeVideos: alternativeVideos,
@@ -436,6 +479,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         selectedJSEpisode,
         selectedExtension,
       );
+      if (isClosed) return [];
       if (videoResults.isNotEmpty) {
         return videoResults.map((jVideo) => ext.Video.fromJVideo(jVideo)).toList();
       } else {
@@ -499,6 +543,7 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
         state.selectedAnime,
         state.loggedUser,
       );
+      if (isClosed) return;
       emit(state.copyWith(mediaListEntry: savedMediaListEntry));
       _reloadNotifier.emitReload(ReloadType.videoMediaListEntryUpdated);
     } on HttpServerException catch (e, stackTrace) {

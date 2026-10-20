@@ -82,10 +82,15 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
       emit(state.copyWith(loggedUser: loggedUser));
       if (!state.userLoaded) {
         await _fetchRecentlyReleased(1, loggedUser);
+        if (isClosed) return;
         await _fetchTrending(1, loggedUser);
+        if (isClosed) return;
         await _fetchRecentlyCompleted(1, loggedUser);
+        if (isClosed) return;
         await _fetchPopular(1, loggedUser);
+        if (isClosed) return;
         await _fetchUpcoming(1, loggedUser);
+        if (isClosed) return;
         emit(state.copyWith(userLoaded: true, isLoading: false));
       }
     });
@@ -126,6 +131,7 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
       _logger.i("Fetching recently released anime");
       (bool, List<Anime>) recentlyReleased = await _animeRepository
           .getRecentlyReleasedAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(recentlyReleased: recentlyReleased));
     } on HttpServerException catch (e, stackTrace) {
       handleError(
@@ -146,6 +152,7 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
       _logger.i("Fetching trending anime");
       (bool, List<Anime>) trending = await _animeRepository
           .getTrendingAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(trending: trending));
       if (page == 1) {
         List<Anime> banners = trending.$2.where((anime) => anime.bannerImage != "").toList();
@@ -174,6 +181,7 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
       _logger.i("Fetching popular anime");
       (bool, List<Anime>) popular = await _animeRepository
           .getPopularAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(popular: popular));
     } on HttpServerException catch (e, stackTrace) {
       handleError(
@@ -191,6 +199,7 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
       _logger.i("Fetching recently completed anime");
       (bool, List<Anime>) recentlyCompleted = await _animeRepository
           .getRecentlyCompletedAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(recentlyCompleted: recentlyCompleted));
     } on HttpServerException catch (e, stackTrace) {
       handleError(
@@ -211,6 +220,7 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
       _logger.i("Fetching upcoming anime");
       (bool, List<Anime>) upcoming = await _animeRepository
           .getUpcomingAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(upcoming: upcoming));
     } on HttpServerException catch (e, stackTrace) {
       handleError(

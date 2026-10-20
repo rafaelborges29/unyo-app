@@ -153,6 +153,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
               settings: userSettings.copyWith(mediaExtensionConfigs: mediaExtensionsConfigUpdated),
             ),
           );
+          if (isClosed) return;
         case LocalUserModel localUserModel:
       }
       _getMangaInfoFromSelectedExtension(selectedExtension);
@@ -173,6 +174,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
         selectedManga,
         loggedUser,
       );
+      if (isClosed) return;
       emit(
         state.copyWith(
           mediaListEntry: mangaDetails.$2.mediaListEntry,
@@ -185,6 +187,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
       );
       if (mangaDetails.$2.recommendedMangas.isEmpty) {
         (bool, List<Manga>) trendingMangas = await _mangaRepository.getTrendingMangas(1, loggedUser);
+        if (isClosed) return;
         emit(state.copyWith(recommendations: (trendingMangas.$1, trendingMangas.$2.shuffled(Random()))));
       }
     } on HttpServerException catch (e, stackTrace) {
@@ -200,6 +203,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
       Set<Extension> installedExtensions = await _extensionRepositoryAniyomi.getInstalledMangaExtensions(
         state.loggedUser,
       );
+      if (isClosed) return;
       emit(state.copyWith(installedExtensions: installedExtensions));
       _setSelectedExtension(state.loggedUser, state.selectedManga);
     } catch (e, stackTrace) {
@@ -225,6 +229,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
         state.selectedManga.title.userPreferred,
         selectedExtension,
       );
+      if (isClosed) return;
       emit(state.copyWith(extensionMangaResults: mangaResults));
     } catch (e, stackTrace) {
       handleError("Error fetching Manga Info from selected extension: $e", stackTrace: stackTrace);
@@ -257,6 +262,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
     try {
       _logger.i("Fetching Manga Banners for ${state.selectedManga.title.userPreferred}");
       List<String> banners = await _mangaRepository.getMediaCoverImages(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(banners: banners));
     } on HttpServerException catch (e, stackTrace) {
       handleError("Error fetching Manga banners:", responseBody: e.message, stackTrace: stackTrace);

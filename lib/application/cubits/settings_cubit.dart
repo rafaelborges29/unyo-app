@@ -82,6 +82,7 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
         service: MediaServiceFactory.getEnumMediaService(newService),
       );
       await _updateUserInfo(updatedSettings);
+      if (isClosed) return;
       _reloadNotifier.emitReload(ReloadType.newMetadataService);
     } catch (e, stackTrace) {
       logger.e("Error updating media metadata service $e", stackTrace: stackTrace);
@@ -213,6 +214,7 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
           wallpaperColors = await _colorImageService.getColorsFromPalleteGenerator(
             NetworkImage(anilistUserModel.bannerImage),
           );
+          if (isClosed) return;
         case LocalUserModel localUserModel:
           _logger.d("Getting local user's theme");
       }

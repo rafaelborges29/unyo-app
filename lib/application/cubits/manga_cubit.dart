@@ -76,9 +76,13 @@ class MangaCubit extends Cubit<MangaState> with EffectMixin<MangaState> {
       emit(state.copyWith(loggedUser: loggedUser));
       if (!state.userLoaded) {
         await _fetchTrending(1, loggedUser);
+        if (isClosed) return;
         await _fetchRecentlyCompleted(1, loggedUser);
+        if (isClosed) return;
         await _fetchPopular(1, loggedUser);
+        if (isClosed) return;
         await _fetchUpcoming(1, loggedUser);
+        if (isClosed) return;
         emit(state.copyWith(userLoaded: true, isLoading: false));
       }
     });
@@ -111,6 +115,7 @@ class MangaCubit extends Cubit<MangaState> with EffectMixin<MangaState> {
       _logger.i("Fetching trending manga");
       (bool, List<Manga>) trending = await _mangaRepository
           .getTrendingMangas(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(trending: trending));
       if (page == 1) {
         emit(
@@ -132,6 +137,7 @@ class MangaCubit extends Cubit<MangaState> with EffectMixin<MangaState> {
       _logger.i("Fetching popular manga");
       (bool, List<Manga>) popular = await _mangaRepository
           .getPopularMangas(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(popular: popular));
     } catch (e, stackTrace) {
       handleError("Failed to fetch popular manga $e", stackTrace: stackTrace);
@@ -143,6 +149,7 @@ class MangaCubit extends Cubit<MangaState> with EffectMixin<MangaState> {
       _logger.i("Fetching recently completed manga");
       (bool, List<Manga>) recentlyCompleted = await _mangaRepository
           .getRecentlyCompletedMangas(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(recentlyCompleted: recentlyCompleted));
     } catch (e, stackTrace) {
       handleError(
@@ -157,6 +164,7 @@ class MangaCubit extends Cubit<MangaState> with EffectMixin<MangaState> {
       _logger.i("Fetching upcoming manga");
       (bool, List<Manga>) upcoming = await _mangaRepository
           .getUpcomingMangas(page, loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(upcoming: upcoming));
     } catch (e, stackTrace) {
       handleError("Failed to fetch upcoming manga $e", stackTrace: stackTrace);

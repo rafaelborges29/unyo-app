@@ -77,6 +77,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
     }
     try {
       await _extensionRepositoryAniyomi.addExtension(extension);
+      if (isClosed) return;
       if (extension.type == ExtensionType.ANIYOMI) {
         _fetchInstaledAnimeExtensions(state.loggedUser);
         _fetchAvailableAnimeExtensions(state.loggedUser);
@@ -92,6 +93,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
         contentType: ContentType.success,
       );
     } catch (e, stackTrace) {
+      if (isClosed) return;
       if (extension.type == ExtensionType.ANIYOMI) {
         _fetchAvailableAnimeExtensions(state.loggedUser);
       } else {
@@ -109,6 +111,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
     }
     try {
       await _extensionRepositoryAniyomi.removeExtension(extension);
+      if (isClosed) return;
       if (extension.type == ExtensionType.ANIYOMI) {
         _fetchInstaledAnimeExtensions(state.loggedUser);
         _fetchAvailableAnimeExtensions(state.loggedUser);
@@ -124,6 +127,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
         contentType: ContentType.success,
       );
     } catch (e, stackTrace) {
+      if (isClosed) return;
       if (extension.type == ExtensionType.ANIYOMI) {
         _fetchInstaledAnimeExtensions(state.loggedUser);
       } else {
@@ -145,6 +149,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
 
     try {
       await _extensionRepositoryAniyomi.updateExtension(installedExtension, newExtension);
+      if (isClosed) return;
       if (installedExtension.type == ExtensionType.ANIYOMI) {
         _fetchInstaledAnimeExtensions(state.loggedUser);
         _fetchAvailableAnimeExtensions(state.loggedUser);
@@ -168,6 +173,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
     try {
       _logger.i("Fetching preferences for ${extension.name}");
       final preferences = await _extensionRepositoryAniyomi.getExtensionPreferences(extension.pkg);
+      if (isClosed) return;
       showWidgetDialogEffect(
         dialog: ExtensionPreferencesDialog(
           pkg: extension.pkg,
@@ -183,6 +189,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
   Future<void> _saveExtensionPreferences(String pkg, Map<String, dynamic> values) async {
     try {
       await _extensionRepositoryAniyomi.setExtensionPreferences(pkg, values);
+      if (isClosed) return;
       showSnackBarEffect(
         "Preferences Saved",
         message: "Extension preferences updated",
@@ -209,6 +216,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
       _logger.i("Fetching available anime extensions for Aniyomi");
       Set<Extension> availableAniyomiExtensions = await _extensionRepositoryAniyomi
           .getAvailableAnimeExtensions(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(availableAnimeExtensions: availableAniyomiExtensions.toList()));
     } on HttpServerException catch (e, stackTrace) {
       handleError(
@@ -226,6 +234,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
       _logger.i("Fetching available manga extensions for Aniyomi");
       Set<Extension> availableTachiyomiExtensions = await _extensionRepositoryAniyomi
           .getAvailableMangaExtensions(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(availableMangaExtensions: availableTachiyomiExtensions.toList()));
     } on HttpServerException catch (e, stackTrace) {
       handleError(
@@ -243,6 +252,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
       _logger.i("Fetching installed anime extensions for Aniyomi");
       Set<Extension> installedAniyomiExtensions = await _extensionRepositoryAniyomi
           .getInstalledAnimeExtensions(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(installedAnimeExtensions: installedAniyomiExtensions.toList()));
     } catch (e, stackTrace) {
       handleError("Failed to fetch installed anime extensions $e", stackTrace: stackTrace);
@@ -254,6 +264,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
       _logger.i("Fetching installed manga extensions for Aniyomi");
       Set<Extension> installedTachiyomiExtensions = await _extensionRepositoryAniyomi
           .getInstalledMangaExtensions(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(installedMangaExtensions: installedTachiyomiExtensions.toList()));
     } catch (e, stackTrace) {
       handleError("Failed to fetch installed manga extensions $e", stackTrace: stackTrace);
@@ -264,6 +275,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
     try {
       _logger.i("Fetching anime extension updates");
       final updates = await _extensionRepositoryAniyomi.getAnimeExtensionUpdates(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(animeExtensionUpdates: updates));
     } catch (e, stackTrace) {
       _logger.w("Failed to fetch anime extension updates", stackTrace: stackTrace);
@@ -274,6 +286,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
     try {
       _logger.i("Fetching manga extension updates");
       final updates = await _extensionRepositoryAniyomi.getMangaExtensionUpdates(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(mangaExtensionUpdates: updates));
     } catch (e, stackTrace) {
       _logger.w("Failed to fetch manga extension updates", stackTrace: stackTrace);

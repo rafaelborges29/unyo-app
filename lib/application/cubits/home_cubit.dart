@@ -92,7 +92,9 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
       );
       if (!state.userLoaded) {
         await _getUserInfo(loggedUser);
+        if (isClosed) return;
         await _getMediaCoverImages(loggedUser);
+        if (isClosed) return;
         _menuBarNotifier.showMenuBar(true);
         emit(state.copyWith(userLoaded: true, isLoading: false));
       }
@@ -144,8 +146,10 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
           _logger.i("Fetching Anilist User lists");
           List<Anime> watchingList = await _userRepositoryAnilist
               .getUserWatchingList(anilistUserModel, ignoreCache: ignoreCacheAnime);
+          if (isClosed) return;
           List<Manga> readingList = await _userRepositoryAnilist
               .getUserReadingList(anilistUserModel, ignoreCache: ignoreCacheManga);
+          if (isClosed) return;
           emit(
             state.copyWith(
               continueWatching: watchingList,
@@ -164,6 +168,7 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
     try {
       _logger.i("Fetching Media Cover Images");
       List<String> mediaCoverImages = await _animeRepository.getMediaCoverImages(loggedUser, ignoreCache: ignoreCache);
+      if (isClosed) return;
       emit(state.copyWith(mediaCoverImages: mediaCoverImages));
     } catch (e, stackTrace) {
       handleError("Error fetching media cover images: $e", stackTrace: stackTrace);

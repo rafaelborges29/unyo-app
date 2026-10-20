@@ -217,6 +217,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
               settings: userSettings.copyWith(mediaExtensionConfigs: mediaExtensionsConfigUpdated),
             ),
           );
+          if (isClosed) return;
         case LocalUserModel localUserModel:
       }
       _getAnimeInfoFromSelectedExtension(selectedExtension);
@@ -242,6 +243,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       state.selectedExtension,
       state.extensionAnimeResults[state.selectedAnimeResultIndex],
     );
+    if (isClosed) return;
     if (!canOpenDrawer) {
       emit(state.copyWith(animeServerDialogLoading: false));
      return;
@@ -251,6 +253,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           cubit: this,
           episodeIndex: episodeIndex,
           onOpen: () async {
+            if (isClosed) return false;
             if (episodeIndex >= state.extensionEpisodeResults.length) {
               _logger.w("Episode index $episodeIndex is out of bounds for extension episode results.");
               showSnackBarEffect("${state.selectedExtension?.name} Error", message: "Only ${state.extensionEpisodeResults.length} episodes were found", contentType: ContentType.warning);
@@ -260,6 +263,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
               state.selectedExtension,
               state.extensionEpisodeResults[episodeIndex],
             );
+            if (isClosed) return false;
             if (!shouldKeepDialog && context.mounted) {
               emit(state.copyWith(animeServerDialogReady: false, animeServerDialogLoading: false));
               return false;
@@ -283,6 +287,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         state.selectedAnime,
         state.loggedUser,
       );
+      if (isClosed) return;
       _reloadNotifier.emitReload(ReloadType.animeMediaListEntryUpdated);
       if (desiredMediaListEntry.status != beforeUpdateMediaListEntry.status) {
         _reloadNotifier.emitReload(ReloadType.homeMediaListEntryUpdated);
@@ -292,7 +297,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     } catch (e, stackTrace) {
       handleError("Error updating Anime Entry: $e", stackTrace: stackTrace);
     }
-    if (!context.mounted) return;
+    if (isClosed || !context.mounted) return;
     popRouteEffect(context);
   }
 
@@ -365,7 +370,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         );
       },
     );
-    if (selectedDateTime == null) return;
+    if (isClosed || selectedDateTime == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         startedAt: [
@@ -401,7 +406,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         );
       },
     );
-    if (selectedDateTime == null) return;
+    if (isClosed || selectedDateTime == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         completedAt: [
@@ -424,6 +429,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         loggedUser,
         ignoreCache: ignoreCache,
       );
+      if (isClosed) return;
       emit(state.copyWith(mediaListEntry: mediaListEntry, newMediaListEntry: mediaListEntry));
       _mediaListEntryNotifier.updateSelectedMediaListEntry(mediaListEntry);
     } on HttpServerException catch (e, stackTrace) {
@@ -440,6 +446,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         selectedAnime,
         loggedUser,
       );
+      if (isClosed) return;
       emit(
         state.copyWith(
           characters: (animeDetails.$2.characters.isNotEmpty, animeDetails.$2.characters),
@@ -456,6 +463,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           1,
           loggedUser,
         );
+        if (isClosed) return;
         emit(state.copyWith(recommendations: (trendingAnimes.$1, trendingAnimes.$2.shuffled(Random()))));
       }
       _getAlternativeImage(loggedUser, selectedAnime);
@@ -472,6 +480,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       Set<Extension> installedExtensions = await _extensionRepositoryAniyomi.getInstalledAnimeExtensions(
         state.loggedUser,
       );
+      if (isClosed) return;
       emit(state.copyWith(installedExtensions: installedExtensions));
       _setSelectedExtension(state.loggedUser, state.selectedAnime);
     } catch (e, stackTrace) {
@@ -497,12 +506,14 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         state.selectedAnime.title.userPreferred,
         selectedExtension,
       );
+      if (isClosed) return;
       if (animeResults.isEmpty) {
         _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.userPreferred}, trying alternative english title.");
         animeResults = await _extensionRepositoryAniyomi.getAnimeSearchResults(
           state.selectedAnime.title.english,
           selectedExtension,
         );
+        if (isClosed) return;
       }
       if (animeResults.isEmpty) {
         _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.english}, trying alternative native title.");
@@ -510,6 +521,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           state.selectedAnime.title.nativeTitle,
           selectedExtension,
         );
+        if (isClosed) return;
       }
       if (animeResults.isEmpty) {
         _logger.w("No results found in ${selectedExtension.name} for ${state.selectedAnime.title.nativeTitle}, trying alternative romaji title.");
@@ -517,8 +529,10 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           state.selectedAnime.title.romaji,
           selectedExtension,
         );
+        if (isClosed) return;
       }
       int selectedAnimeResultIndex = await _fuzzySelectAnimeResultIndex(animeResults);
+      if (isClosed) return;
       emit(state.copyWith(extensionAnimeResults: animeResults, selectedAnimeResultIndex: selectedAnimeResultIndex));
       if (animeResults.isNotEmpty) {
         showSnackBarEffect(
@@ -590,6 +604,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         selectedJSAnime,
         selectedExtension,
       );
+      if (isClosed) return false;
       if (episodeResults.isNotEmpty) {
         List<JSEpisode> sortedEpisodes = episodeResults.sorted((animeEpisode1, animeEpisode2) => animeEpisode1.getEpisode_number().toInt() - animeEpisode2.getEpisode_number().toInt());
         emit(state.copyWith(extensionEpisodeResults: sortedEpisodes));
@@ -639,6 +654,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         selectedJSEpisode,
         selectedExtension,
       );
+      if (isClosed) return false;
       if (videoResults.isNotEmpty) {
         emit(state.copyWith(extensionVideoResults: videoResults.map((jVideo) => ext.Video.fromJVideo(jVideo)).toList()));
         return true;
@@ -666,11 +682,13 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           malId: -1,
           anilistId: selectedAnime.id,
         );
+        if (isClosed) return;
       } else {
         alternateImage = await _episodeRepository.getAlternativeImage(
           malId: selectedAnime.idMal,
           anilistId: -1,
         );
+        if (isClosed) return;
       }
       emit(state.copyWith(alternateImage: alternateImage));
     } on HttpServerException catch (e, stackTrace) {
@@ -689,11 +707,13 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           malId: -1,
           anilistId: selectedAnime.id,
         );
+        if (isClosed) return;
       } else {
         episodesInfo = await _episodeRepository.getEpisodeInfo(
           malId: selectedAnime.idMal,
           anilistId: -1,
         );
+        if (isClosed) return;
       }
       emit(state.copyWith(episodesInfo: episodesInfo));
       _episodesInfoNotifier.updateSelectedEpisodeInfo(episodesInfo);
@@ -708,6 +728,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     try {
       _logger.i("Fetching Anime Banners for ${state.selectedAnime.title.userPreferred}");
       List<String> banners = await _animeRepository.getMediaCoverImages(loggedUser);
+      if (isClosed) return;
       emit(state.copyWith(banners: banners));
     } on HttpServerException catch (e, stackTrace) {
       handleError("Error fetching Anime banners:", responseBody: e.message, stackTrace: stackTrace);
