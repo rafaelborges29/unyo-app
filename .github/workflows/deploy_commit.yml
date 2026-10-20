@@ -8,11 +8,26 @@ on:
         required: true
         default: 'master'
       version:
-        description: 'Version to release'
+        description: 'Version to release (X.Y.Z, without v)'
         required: true
 
+env:
+  RELEASE_VERSION: ${{ github.event.inputs.version }}
+
 jobs:
+  validate-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release version
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Version must use X.Y.Z format (digits only, without v).' >&2
+            exit 1
+          fi
+
   create-tag:
+    needs: validate-version
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -22,7 +37,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const tagName = `v${{ github.event.inputs.version }}`;
+            const tagName = `v${process.env.RELEASE_VERSION}`;
             const { data: tag } = await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -32,6 +47,7 @@ jobs:
             return tag;;
 
   build-and-release-linux:
+    needs: validate-version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +99,7 @@ jobs:
       - name: Give Permissions
         run: chmod 755 appimagetool.AppImage
       - name: Execute appimagetool
-        run: ./appimagetool.AppImage Unyo.AppDir Unyo-${{ github.event.inputs.version }}-linux.AppImage
+        run: ./appimagetool.AppImage Unyo.AppDir "Unyo-${RELEASE_VERSION}-linux.AppImage"
       - name: Linux AppImage Release
         uses: softprops/action-gh-release@v1
         env:
@@ -97,7 +113,7 @@ jobs:
       - name: Build deb package
         run: flutter_to_debian
       - name: Rename deb file
-        run: cp build/linux/x64/release/debian/unyo_0.0.0_amd64.deb build/linux/x64/release/debian/unyo-${{ github.event.inputs.version }}-linux.deb
+        run: cp build/linux/x64/release/debian/unyo_0.0.0_amd64.deb "build/linux/x64/release/debian/unyo-${RELEASE_VERSION}-linux.deb"
       - name: Linux Debian package Release
         uses: softprops/action-gh-release@v1
         env:
@@ -106,6 +122,7 @@ jobs:
           files: build/linux/x64/release/debian/unyo-${{ github.event.inputs.version }}-linux.deb
 
   build-and-release-windows:
+    needs: validate-version
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -156,6 +173,7 @@ jobs:
           files: build\windows\x64\runner\unyo-${{ github.event.inputs.version }}-windows-setup.exe
 
   build-and-release-macos:
+    needs: validate-version
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -200,7 +218,7 @@ jobs:
           pod update
           cd ..
           brew install create-dmg
-          create-dmg --volname Unyo-${{ github.event.inputs.version }}-macos --window-pos 200 120 --window-size 800 450 --icon-size 100 --app-drop-link 600 185 Unyo-${{ github.event.inputs.version }}-macos.dmg build/macos/Build/Products/Release/unyo.app
+          create-dmg --volname "Unyo-${RELEASE_VERSION}-macos" --window-pos 200 120 --window-size 800 450 --icon-size 100 --app-drop-link 600 185 "Unyo-${RELEASE_VERSION}-macos.dmg" build/macos/Build/Products/Release/unyo.app
       - name: macOS dmg Release
         uses: softprops/action-gh-release@v1
         env:
