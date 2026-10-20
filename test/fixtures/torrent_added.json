@@ -1,0 +1,23 @@
+{
+  "title": "Unyo regression",
+  "category": "",
+  "poster": "",
+  "timestamp": 1792482947,
+  "name": "Unyo regression",
+  "hash": "072a58eeeae88b1a2686bcc982d9b1e06d227115",
+  "stat": 0,
+  "stat_string": "Torrent added",
+  "torrent_size": 2,
+  "file_stats": [
+    {
+      "id": 1,
+      "path": "Unyo regression/Episode 01.mkv",
+      "length": 1
+    },
+    {
+      "id": 2,
+      "path": "Unyo regression/Episode 02.mkv",
+      "length": 1
+    }
+  ]
+}
