@@ -38,6 +38,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   final UserNotifier _loggedUserNotifier;
   late Box<AnilistUserModel> _anilistUsersBox;
   late HttpServer _server;
+  Future<void> _pendingUserUpdate = Future.value();
 
   UserRepositoryAnilist(this._newUserNotifier, this._loggedUserNotifier);
 
@@ -72,16 +73,25 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   }
 
   @override
-  Future<void> updateUserInfo(User user) async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
-    if (_anilistUsersBox.containsKey(user.name)) {
-      _logger.w("User ${user.name} already exists in the registered anilist users, updating info");
-      await _anilistUsersBox.put(user.name, user as AnilistUserModel);
-    } else {
-      _logger.i("Adding new user ${user.name} to the registered anilist users");
-      await _anilistUsersBox.put(user.name, user as AnilistUserModel);
-    }
-    _loggedUserNotifier.updateUser(user);
+  Future<void> updateUserInfo(User user, {SettingsModel Function(SettingsModel)? updateSettings}) {
+    // Apply each preference change only after the previous write has completed.
+    final update = _pendingUserUpdate.then((_) async {
+      _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+      final latestUser = _anilistUsersBox.get(user.name) ?? user as AnilistUserModel;
+      final updatedUser = updateSettings == null
+          ? user as AnilistUserModel
+          : latestUser.copyWith(settings: updateSettings(latestUser.settings as SettingsModel));
+      if (_anilistUsersBox.containsKey(user.name)) {
+        _logger.w("User ${user.name} already exists in the registered anilist users, updating info");
+      } else {
+        _logger.i("Adding new user ${user.name} to the registered anilist users");
+      }
+      await _anilistUsersBox.put(user.name, updatedUser);
+      _loggedUserNotifier.updateUser(updatedUser);
+    });
+    // Let callers handle failures without preventing later changes or retries.
+    _pendingUserUpdate = update.catchError((Object _) {});
+    return update;
   }
 
   @override

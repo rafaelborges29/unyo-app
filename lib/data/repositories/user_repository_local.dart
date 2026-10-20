@@ -42,7 +42,7 @@ class UserRepositoryLocal implements UserRepository {
   }
 
   @override
-  Future<void> updateUserInfo(User user) {
+  Future<void> updateUserInfo(User user, {SettingsModel Function(SettingsModel)? updateSettings}) {
     throw UnimplementedError();
   }
 

@@ -145,12 +145,11 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
     if (selectedExtension != null) {
       switch (state.loggedUser) {
         case AnilistUserModel anilistUserModel:
-          SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
-          Map<String, Extension> mediaExtensionsConfigUpdated = Map.from(userSettings.mediaExtensionConfigs);
-          mediaExtensionsConfigUpdated.addAll({state.selectedManga.id.toString(): selectedExtension});
+          final mediaId = state.selectedManga.id.toString();
           await _userRepositoryAnilist.updateUserInfo(
-            anilistUserModel.copyWith(
-              settings: userSettings.copyWith(mediaExtensionConfigs: mediaExtensionsConfigUpdated),
+            anilistUserModel,
+            updateSettings: (settings) => settings.copyWith(
+              mediaExtensionConfigs: {...settings.mediaExtensionConfigs, mediaId: selectedExtension},
             ),
           );
         case LocalUserModel localUserModel:
