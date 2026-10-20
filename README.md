@@ -61,6 +61,8 @@ If you are on **Linux**, you can:
 
 When setting up Unyo, make sure your AniList profile is set to either public or semi-public. Currently, Unyo won't be able to pull your anime and manga lists if your account is set to private.
 
+AniList login accepts access-token responses without a refresh token, as [AniList does not issue refresh tokens](https://github.com/AniList/docs/blob/master/docs/guide/auth/index.md).
+
 ## Available Extensions
 
 ### Remote Extensions
