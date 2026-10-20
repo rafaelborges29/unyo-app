@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 class UnyoSlider extends StatefulWidget {
   final int minValue;
   final int maxValue;
-  final int initialValue;
+  final num initialValue;
+  final int? divisions;
   final String title;
   final void Function(double) onChanged;
 
@@ -14,6 +15,7 @@ class UnyoSlider extends StatefulWidget {
     required this.maxValue,
     required this.title,
     required this.onChanged,
+    this.divisions,
   });
 
   @override
@@ -42,7 +44,9 @@ class _UnyoSliderState extends State<UnyoSlider> {
             SizedBox(
               width: 35,
               child: Text(
-                "${_currentValue.toInt()}",
+                _currentValue == _currentValue.roundToDouble()
+                    ? _currentValue.toInt().toString()
+                    : _currentValue.toStringAsFixed(1),
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),
             ),
@@ -51,15 +55,16 @@ class _UnyoSliderState extends State<UnyoSlider> {
                 value: _currentValue,
                 min: widget.minValue.toDouble(),
                 max: widget.maxValue.toDouble(),
-                divisions: (widget.maxValue - widget.minValue) == 0 ? null : widget.maxValue - widget.minValue,
+                divisions: widget.divisions ??
+                    ((widget.maxValue - widget.minValue) == 0 ? null : widget.maxValue - widget.minValue),
                 // label: "$_currentValue",
                 activeColor: ColorScheme.of(context).tertiary,
                 inactiveColor: ColorScheme.of(context).secondary.withValues(alpha: 0.4),
                 onChanged: (value) {
                   setState(() {
-                    _currentValue = value;
+                    _currentValue = double.parse(value.toStringAsFixed(1));
                   });
-                  widget.onChanged(value);
+                  widget.onChanged(_currentValue);
                 },
               ),
             ),

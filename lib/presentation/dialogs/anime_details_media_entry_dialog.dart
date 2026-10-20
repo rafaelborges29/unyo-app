@@ -10,8 +10,15 @@ import 'package:unyo/presentation/widgets/styled/unyo_slider.dart';
 
 class AnimeDetailsMediaEntryDialog extends StatelessWidget {
   final AnimeDetailsCubit cubit;
+  final int maxScore;
+  final int scoreDivisions;
 
-  const AnimeDetailsMediaEntryDialog({super.key, required this.cubit});
+  const AnimeDetailsMediaEntryDialog({
+    super.key,
+    required this.cubit,
+    required this.maxScore,
+    required this.scoreDivisions,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +79,10 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                           SizedBox(height: 25.0.h),
                           UnyoSlider(
                             minValue: 0,
-                            initialValue:
-                            state.newMediaListEntry.score.toInt() != -1 ? state.newMediaListEntry.score.toInt() : 0,
+                            initialValue: state.newMediaListEntry.score != -1 ? state.newMediaListEntry.score : 0,
                             title: "Score",
-                            maxValue: 10,
+                            maxValue: maxScore,
+                            divisions: scoreDivisions,
                             onChanged: context.read<AnimeDetailsCubit>().updateMediaListEntryScore,
                           ),
                           SizedBox(height: 25.0.h),
