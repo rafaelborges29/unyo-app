@@ -1,5 +1,7 @@
 // External dependencies
+import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:hive_ce/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:unyo/core/di/locator.dart';
@@ -37,7 +39,8 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   final UserNotifier _newUserNotifier;
   final UserNotifier _loggedUserNotifier;
   late Box<AnilistUserModel> _anilistUsersBox;
-  late HttpServer _server;
+  HttpServer? _server;
+  String? _loginState;
 
   UserRepositoryAnilist(this._newUserNotifier, this._loggedUserNotifier);
 
@@ -49,25 +52,44 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   @override
   Future<void> attemptCreateUser() async {
+    if (_loginState != null || _server != null) return;
+
+    final random = Random.secure();
+    final state = base64Url.encode(List<int>.generate(32, (_) => random.nextInt(256)));
+    final authUri = Uri.parse(config.anilistAuthUrl);
+    final loginUri = authUri.replace(queryParameters: {...authUri.queryParameters, 'state': state});
+    _loginState = state;
     _logger.i("Creating Anilist user");
+    late final HttpServer server;
     try {
       _logger.d("Opening Anilist login server at http://localhost:9999");
-      _server = await shelfio.serve(_handleLoginRequest, 'localhost', 9999, shared: true);
+      server = await shelfio.serve((request) {
+        final states = request.requestedUri.queryParametersAll['state'];
+        if (_loginState != state || states == null || states.length != 1 || states.single != state) {
+          return shelf.Response.badRequest(body: 'Invalid authorization state.');
+        }
+        return _handleLoginRequest(request);
+      }, 'localhost', 9999);
+      _server = server;
     } catch (e, stackTrace) {
+      _loginState = null;
       _logger.e("Error attempting to open server: $e", stackTrace: stackTrace);
-      if (await canLaunchUrl(Uri.parse(config.anilistAuthUrl))) {
-        await launchUrl(Uri.parse(config.anilistAuthUrl));
-      } else {
-        _logger.e("Could not launch ${config.anilistAuthUrl}");
-      }
       rethrow;
     }
 
-    _logger.i("Launching Anilist authorization URL: ${config.anilistAuthUrl}");
-    if (await canLaunchUrl(Uri.parse(config.anilistAuthUrl))) {
-      await launchUrl(Uri.parse(config.anilistAuthUrl));
-    } else {
-      _logger.e("Could not launch ${config.anilistAuthUrl}");
+    try {
+      _logger.i("Launching Anilist authorization URL");
+      if (!await canLaunchUrl(loginUri) || !await launchUrl(loginUri)) {
+        throw StateError('Could not launch Anilist authorization URL');
+      }
+    } catch (_, stackTrace) {
+      if (_server == server) {
+        _loginState = null;
+        await server.close(force: true);
+        _server = null;
+      }
+      _logger.e("Could not launch Anilist authorization URL", stackTrace: stackTrace);
+      throw StateError('Could not launch Anilist authorization URL');
     }
   }
 
@@ -211,12 +233,15 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
         body: "Something went wrong D:, please verify your internet connection and try again",
       );
     } finally {
+      _loginState = null;
       _logger.i("Closing Anilist login server");
-      _server.close();
+      await _server?.close();
+      _server = null;
     }
   }
 
   Future<void> _createUser(String accessCode) async {
+    _loginState = null;
     _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
     ApiResponse<AuthTokenEntity> authToken = await getAuthToken(accessCode);
     Map<String, String> graphQlHeaders = {"Authorization": "Bearer ${authToken.data.accessToken}"};
