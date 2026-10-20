@@ -219,9 +219,15 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
       _themeService.updateThemeFromColors(
         loggedUser: state.loggedUser,
         useWallpaperAsThemeColor: true,
-        primary: wallpaperColors[0],
-        secondary: wallpaperColors[1],
-        tertiary: wallpaperColors[2],
+        primary: wallpaperColors.isEmpty
+            ? _themeService.defaultPrimaryColor
+            : wallpaperColors[0],
+        secondary: wallpaperColors.isEmpty
+            ? _themeService.defaultSecondaryColor
+            : wallpaperColors[1],
+        tertiary: wallpaperColors.isEmpty
+            ? _themeService.defaultTertiaryColor
+            : wallpaperColors[2],
       );
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling using the user wallpaper as a Theme $e", stackTrace: stackTrace);

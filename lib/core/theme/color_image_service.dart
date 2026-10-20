@@ -41,19 +41,25 @@ class ColorImageService {
   }
 
   Future<List<Color>> getColorsFromPalleteGenerator(ImageProvider provider) async {
-    PaletteGenerator generator = await PaletteGenerator.fromImageProvider(
-      provider,
-      maximumColorCount: 20,
-    );
+    try {
+      PaletteGenerator generator = await PaletteGenerator.fromImageProvider(
+        provider,
+        maximumColorCount: 20,
+      );
 
-    List<Color> sortedColors = generator.colors.toList();
-    while (sortedColors.length < 20) {
-      sortedColors.addAll(generator.colors.toList());
+      List<Color> sortedColors = generator.colors.toList();
+      if (sortedColors.isEmpty) return [];
+      while (sortedColors.length < 20) {
+        sortedColors.addAll(generator.colors.toList());
+      }
+      sortedColors.sort((color1, color2) =>
+          (color1.computeLuminance() * 10 - color2.computeLuminance() * 10)
+              .toInt());
+      return [sortedColors[10], sortedColors.first, sortedColors.last];
+    } catch (e) {
+      debugPrint('Error getting colors from image: $e');
+      return [];
     }
-    sortedColors.sort((color1, color2) =>
-        (color1.computeLuminance() * 10 - color2.computeLuminance() * 10)
-            .toInt());
-    return [sortedColors[10], sortedColors.first, sortedColors.last];
   }
 
   // ColorScheme.fromImageProvider() utilities.
