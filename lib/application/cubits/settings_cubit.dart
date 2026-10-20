@@ -372,7 +372,8 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
     if (!uri.isAbsolute) return false;
     if (uri.scheme != 'https') return false;
     if (uri.host.isEmpty) return false;
-    if (!url.toLowerCase().endsWith('.json')) return false;
+    if (uri.hasQuery || uri.hasFragment) return false;
+    if (!uri.path.toLowerCase().endsWith('.json')) return false;
 
     return true;
   }
