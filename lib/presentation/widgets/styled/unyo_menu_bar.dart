@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:unyo/presentation/widgets/styled/styled.dart';
 
@@ -13,6 +14,7 @@ class UnyoMenuBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final avatarLabel = context.tr("user_options");
     return Padding(
       padding: EdgeInsets.only(left: 20.0.w, top: 15.0.h),
       child: RepaintBoundary(
@@ -42,13 +44,21 @@ class UnyoMenuBar extends StatelessWidget {
                    const SizedBox(height: 20,),
                      Material(
                        color: Colors.transparent,
-                       child: InkWell(
-                         borderRadius: BorderRadius.circular(35),
-                         onTap: onIconTap,
-                         child: CircleAvatar(
-                           radius: 27,
-                           backgroundColor: Colors.transparent,
-                           backgroundImage: NetworkImage(avatarImage),
+                       child: Semantics(
+                         label: avatarLabel,
+                         button: true,
+                         child: Tooltip(
+                           message: avatarLabel,
+                           excludeFromSemantics: true,
+                           child: InkWell(
+                             borderRadius: BorderRadius.circular(35),
+                             onTap: onIconTap,
+                             child: CircleAvatar(
+                               radius: 27,
+                               backgroundColor: Colors.transparent,
+                               backgroundImage: NetworkImage(avatarImage),
+                             ),
+                           ),
                          ),
                        ),
                      ),
