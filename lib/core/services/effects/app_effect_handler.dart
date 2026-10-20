@@ -119,12 +119,15 @@ class AppEffectHandler {
       actions: const [SizedBox.shrink()],
     );
 
+    final messenger = ScaffoldMessenger.of(context);
     timer.cancel();
-    ScaffoldMessenger.of(context)
+    messenger
       ..hideCurrentMaterialBanner()
       ..showMaterialBanner(snackBar);
     timer = Timer(Duration(seconds: effect.contentType == ContentType.success ? 1 : 3), () {
-      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      if (messenger.mounted) {
+        messenger.hideCurrentMaterialBanner();
+      }
     });
   }
 
