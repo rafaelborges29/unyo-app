@@ -57,7 +57,6 @@ If you are on **Linux**, you can:
 - If you're on an Arch-based distribution, find Unyo in the AUR under the name "unyo-bin".
 - Download the .zip file, extract it, and run the executable "unyo".
 - Download the .AppImage file and run it.
-- Download the .deb file and install the package by running "sudo apt install ./package_name.deb" (Debian-based distributions only).
 
 When setting up Unyo, make sure your AniList profile is set to either public or semi-public. Currently, Unyo won't be able to pull your anime and manga lists if your account is set to private.
 
