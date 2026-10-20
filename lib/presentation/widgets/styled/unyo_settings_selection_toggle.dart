@@ -52,51 +52,53 @@ class _UnyoSettingsSelectionToggleState extends State<UnyoSettingsSelectionToggl
       height: 75,
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 20.0.w),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 47,
-                  height: 47,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: ColorScheme.of(context).primary.withValues(alpha: 0.2),
+        child: MergeSemantics(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 47,
+                    height: 47,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: ColorScheme.of(context).primary.withValues(alpha: 0.2),
+                    ),
+                    child:
+                        widget.imageUrl == null
+                            ? Icon(widget.icon, color: ColorScheme.of(context).tertiary)
+                            : Image.network(widget.imageUrl!),
                   ),
-                  child:
-                      widget.imageUrl == null
-                          ? Icon(widget.icon, color: ColorScheme.of(context).tertiary)
-                          : Image.network(widget.imageUrl!),
-                ),
-                const SizedBox(width: 18.0),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    Text(
-                      widget.description,
-                      style: TextStyle(color: Colors.grey.withValues(alpha: 0.8), fontSize: 13),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            UnyoToggle(
-              value: _isSelected,
-              onChanged: (value) {
-                setState(() {
-                  _isSelected = value;
-                });
-                widget.onPressed(value);
-              },
-            ),
-          ],
+                  const SizedBox(width: 18.0),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
+                      Text(
+                        widget.description,
+                        style: TextStyle(color: Colors.grey.withValues(alpha: 0.8), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              UnyoToggle(
+                value: _isSelected,
+                onChanged: (value) {
+                  setState(() {
+                    _isSelected = value;
+                  });
+                  widget.onPressed(value);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

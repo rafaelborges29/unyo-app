@@ -1,5 +1,6 @@
 // External dependencies
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:unyo/application/cubits/tabs_cubit.dart';
@@ -72,6 +73,7 @@ class _TabsView extends StatelessWidget {
                       onIconTap: () => context.read<TabsCubit>().showUserOptionsDrawer(),
                       icons: [
                         UnyoMenuIcon(
+                          label: context.tr("home"),
                           isSelected:
                               state.selectedMenuOption ==
                               SelectedMenuOption.home,
@@ -84,6 +86,7 @@ class _TabsView extends StatelessWidget {
                           selectedIcon: Icons.home,
                         ),
                         UnyoMenuIcon(
+                          label: context.tr("anime"),
                           isSelected:
                               state.selectedMenuOption ==
                               SelectedMenuOption.anime,
@@ -96,6 +99,7 @@ class _TabsView extends StatelessWidget {
                           selectedIcon: Icons.movie,
                         ),
                         UnyoMenuIcon(
+                          label: context.tr("manga"),
                           isSelected:
                               state.selectedMenuOption ==
                               SelectedMenuOption.manga,
@@ -108,6 +112,7 @@ class _TabsView extends StatelessWidget {
                           selectedIcon: Icons.menu_book,
                         ),
                         UnyoMenuIcon(
+                          label: context.tr("extensions"),
                           isSelected:
                               state.selectedMenuOption ==
                               SelectedMenuOption.extensions,
@@ -120,6 +125,7 @@ class _TabsView extends StatelessWidget {
                           selectedIcon: Icons.extension,
                         ),
                         UnyoMenuIcon(
+                          label: context.tr("settings"),
                           isSelected:
                               state.selectedMenuOption ==
                               SelectedMenuOption.settings,
