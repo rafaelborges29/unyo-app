@@ -30,10 +30,28 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
     viewportFraction: 1.00,
   );
 
+  int get _itemCount => widget.animeList?.length ?? widget.mangaList?.length ?? 0;
+
   @override
   void initState() {
     _startAutoScroll();
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant UnyoBannerCarousel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldItemCount = oldWidget.animeList?.length ?? oldWidget.mangaList?.length ?? 0;
+    if (oldItemCount != _itemCount) {
+      if (_currentPage >= _itemCount) {
+        _currentPage = _itemCount == 0 ? 0 : _itemCount - 1;
+      }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && controller.hasClients) {
+          controller.jumpToPage(_currentPage);
+        }
+      });
+    }
   }
 
   @override
@@ -46,8 +64,7 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
   void _startAutoScroll() {
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (controller.hasClients) {
-        final itemCount =
-            widget.animeList?.length ?? widget.mangaList?.length ?? 0;
+        final itemCount = _itemCount;
         if (itemCount <= 1) return;
 
         if (_isForward) {
@@ -87,7 +104,7 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.animeList?.isNotEmpty ?? false || widget.mangaList!.isNotEmpty
+    return _itemCount > 0
         ? Column(
           children: [
             Container(
@@ -105,7 +122,7 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
                     _currentPage = index;
                   });
                 },
-                itemCount: widget.animeList?.length ?? widget.mangaList!.length,
+                itemCount: _itemCount,
                 itemBuilder:
                     (context, index) => Padding(
                       padding: EdgeInsets.symmetric(horizontal: 50.0.r),
@@ -176,10 +193,10 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
                                     TextTitleSmall(
                                       text:
                                           widget
-                                              .animeList?[_currentPage]
+                                              .animeList?[index]
                                               .title
                                               .userPreferred ??
-                                          widget.mangaList![_currentPage].title.userPreferred,
+                                          widget.mangaList![index].title.userPreferred,
                                       style: const TextStyle(fontWeight: FontWeight.bold),
                                     ),
                                     Container(
@@ -204,9 +221,9 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
                                               color: Colors.white,
                                             ),
                                             text:
-                                                widget.animeList?[_currentPage].meanScore
+                                                widget.animeList?[index].meanScore
                                                     .toString() ??
-                                                widget.mangaList![_currentPage].meanScore
+                                                widget.mangaList![index].meanScore
                                                     .toString(),
                                           ),
                                         ],
@@ -220,8 +237,8 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
                                     Expanded(
                                       child: TextBodyMedium(
                                         text:
-                                            TextUtils.parseHtmlToPlainText(widget.animeList?[_currentPage].description ??
-                                            widget.mangaList![_currentPage].description),
+                                            TextUtils.parseHtmlToPlainText(widget.animeList?[index].description ??
+                                            widget.mangaList![index].description),
                                         maxLines: 6,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(color: Colors.grey),
@@ -240,7 +257,7 @@ class _UnyoBannerCarouselState extends State<UnyoBannerCarousel> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                widget.animeList?.length ?? widget.mangaList!.length,
+                _itemCount,
                 (index) => AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
