@@ -1,6 +1,3 @@
-import 'package:unyo/core/enums/service.dart';
-import 'package:unyo/domain/entities/user/user.dart' show User;
-
 class TextUtils {
   static String parseHtmlToPlainText(String html) {
     if (html.isEmpty) {
@@ -31,19 +28,27 @@ class TextUtils {
     return text.trim();
   }
 
-  static String extractYearFromStartDate(String startDate, User loggedUser) {
-    switch (loggedUser.settings.service) {
-      case Service.anilist:
-        return startDate.split("/").length > 1 ? startDate.split("/")[2] : "";
-      case Service.mal:
-        throw UnimplementedError();
-      case Service.kitsu:
-        throw UnimplementedError();
-      case Service.shikimori:
-        return startDate.split("/").length > 1 ? startDate.split("/")[2] : "";
-      case Service.simkl:
-        throw UnimplementedError();
+  static String extractYearFromStartDate(String startDate) {
+    final match = RegExp(
+      r'^(\d{1,2})/(\d{1,2})/(\d{1,4})$',
+    ).firstMatch(startDate.trim());
+    if (match == null) {
+      return "~";
     }
+    final day = int.parse(match[1]!);
+    final month = int.parse(match[2]!);
+    final year = int.parse(match[3]!);
+    if (day > 31 || month > 12 || year == 0) {
+      return "~";
+    }
+    // Provider dates use zero for unknown components; do not fill them in.
+    if (day != 0 && month != 0) {
+      final date = DateTime.utc(year, month, day);
+      if (date.day != day || date.month != month) {
+        return "~";
+      }
+    }
+    return year.toString();
   }
 
   static List<String> formatISO8601DateTime(String isoDateTime) {

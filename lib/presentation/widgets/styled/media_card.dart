@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:unyo/presentation/widgets/styled/hover_animated_container.dart';
+import 'package:unyo/presentation/widgets/text/text_utils.dart';
 
 class MediaCard extends StatelessWidget {
   final String title;
@@ -179,7 +180,7 @@ class MediaCard extends StatelessWidget {
                     size: 17,
                   ),
                   Text(
-                    " ${year.split("/")[2]}",
+                    " ${TextUtils.extractYearFromStartDate(year)}",
                     style: TextStyle(
                       fontSize: 14,
                       color: ColorScheme.of(

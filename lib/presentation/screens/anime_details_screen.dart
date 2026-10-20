@@ -185,7 +185,6 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                                               UnyoBannerIcon(
                                                 text: TextUtils.extractYearFromStartDate(
                                                   state.selectedAnime.startDate,
-                                                  state.loggedUser,
                                                 ),
                                                 iconData: Icons.calendar_month_rounded,
                                               ),
