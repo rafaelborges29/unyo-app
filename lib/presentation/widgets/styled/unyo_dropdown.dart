@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 class UnyoDropdown extends StatefulWidget {
   final void Function(String?)? onPressed;
   final List<String> children;
+  final Map<String, String> labels;
   final double? width;
   final IconData? icon;
   final String? label;
@@ -12,6 +13,7 @@ class UnyoDropdown extends StatefulWidget {
   const UnyoDropdown({
     super.key,
     required this.children,
+    this.labels = const {},
     this.width,
     this.icon,
     required this.label,
@@ -31,16 +33,17 @@ class _UnyoDropdownState extends State<UnyoDropdown> {
   void initState() {
     searchController = TextEditingController();
     if (widget.selectedValue != null) {
-      searchController.text = widget.selectedValue!;
+      searchController.text = widget.labels[widget.selectedValue] ?? widget.selectedValue!;
     }
     super.initState();
   }
 
   @override
   void didUpdateWidget(covariant UnyoDropdown oldWidget) {
-    if (oldWidget.selectedValue != widget.selectedValue) {
+    if (oldWidget.selectedValue != widget.selectedValue ||
+        oldWidget.labels[oldWidget.selectedValue] != widget.labels[widget.selectedValue]) {
       setState(() {
-        searchController.text = widget.selectedValue ?? '';
+        searchController.text = widget.labels[widget.selectedValue] ?? widget.selectedValue ?? '';
       });
     }
     super.didUpdateWidget(oldWidget);
@@ -107,7 +110,7 @@ class _UnyoDropdownState extends State<UnyoDropdown> {
                       .map(
                         (element) => DropdownMenuEntry<String?>(
                           value: element,
-                          label: element,
+                          label: widget.labels[element] ?? element,
                           style: const ButtonStyle(
                             backgroundColor: WidgetStatePropertyAll(Colors.transparent),
                             alignment: Alignment.center,

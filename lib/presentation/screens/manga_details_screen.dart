@@ -276,14 +276,18 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: 22.w),
                               child: UnyoDropdown(
-                                onPressed: (selectedExtensionName) => context.read<MangaDetailsCubit>().selectMangaExtension(selectedExtensionName),
-                                selectedValue: state.selectedExtension?.name,
+                                onPressed: context.read<MangaDetailsCubit>().selectMangaExtension,
+                                selectedValue: state.selectedExtension == null
+                                    ? null
+                                    : '${state.selectedExtension!.type}:${state.selectedExtension!.pkg}',
                                 label: "Select Extension",
                                 children: [
-                                  ...state.installedExtensions.map(
-                                        (extension) => extension.name,
-                                  ),
+                                  ...state.installedExtensions.map((extension) => '${extension.type}:${extension.pkg}'),
                                 ],
+                                labels: {
+                                  for (final extension in state.installedExtensions)
+                                    '${extension.type}:${extension.pkg}': '${extension.name} (${extension.lang}) · ${extension.pkg}',
+                                },
                               ),
                             ),
                           ),

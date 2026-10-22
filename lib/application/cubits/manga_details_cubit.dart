@@ -137,12 +137,13 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
     }
   }
 
-  Future<void> selectMangaExtension(String? selectedMangaExtensionName) async {
+  Future<void> selectMangaExtension(String? selectedMangaExtensionId) async {
     Extension? selectedExtension =
         state.installedExtensions
-            .where((extension) => selectedMangaExtensionName == extension.name)
+            .where((extension) => selectedMangaExtensionId == '${extension.type}:${extension.pkg}')
             .firstOrNull;
     if (selectedExtension != null) {
+      emit(state.copyWith(selectedExtension: selectedExtension));
       switch (state.loggedUser) {
         case AnilistUserModel anilistUserModel:
           SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
@@ -157,7 +158,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
       }
       _getMangaInfoFromSelectedExtension(selectedExtension);
     } else {
-      _logger.w("Selected extension $selectedMangaExtensionName not found among installed extensions.");
+      _logger.w("Selected extension $selectedMangaExtensionId not found among installed extensions.");
       showSnackBarEffect(
         "Extension Not Found",
         message: "The selected extension is not installed.",
@@ -272,8 +273,7 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
           SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
           Extension? selectedExtension = userSettings.mediaExtensionConfigs[selectedManga.id.toString()];
           if (selectedExtension != null) {
-            selectMangaExtension(selectedExtension.name);
-            emit(state.copyWith(selectedExtension: selectedExtension));
+            selectMangaExtension('${selectedExtension.type}:${selectedExtension.pkg}');
           }
         case LocalUserModel localUserModel:
       }
