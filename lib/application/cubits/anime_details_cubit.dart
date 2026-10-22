@@ -69,6 +69,10 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   late StreamSubscription<MediaList> _selectedMediaListSubscription;
   late StreamSubscription<ReloadType> _reloadSubscription;
 
+  // Changes on every selection or account/service change, including A -> B -> A.
+  int _selectionVersion = 0;
+  bool _mediaListEntryLoaded = false;
+
   // Logger
   final Logger _logger = sl<Logger>();
 
@@ -132,16 +136,19 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
 
   void _init() {
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) {
+      final userChanged = state.loggedUser.id != loggedUser.id ||
+          state.loggedUser.settings.service != loggedUser.settings.service;
       emit(state.copyWith(loggedUser: loggedUser));
+      if (userChanged) {
+        _loadSelectedAnime(state.selectedAnime);
+      }
       if (!state.userLoaded) {
         _getAnimeBanners(loggedUser);
         emit(state.copyWith(userLoaded: true));
       }
     });
     _selectedAnimeSubscription = _selectedAnimeNotifier.animeStream.listen((anime) {
-      _getAnimeDetails(state.loggedUser, anime);
-      _getEpisodesDetails(state.loggedUser, anime);
-      emit(state.copyWith(selectedAnime: anime));
+      _loadSelectedAnime(anime);
     });
     _selectedMediaListSubscription = _selectedMediaListNotifier.mediaListStream.listen((mediaList) {
       emit(state.copyWith(selectedMediaList: mediaList));
@@ -157,6 +164,32 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       }
     });
     _loadInstalledExtensions();
+  }
+
+  void _loadSelectedAnime(Anime anime) {
+    final selectionVersion = ++_selectionVersion;
+    _mediaListEntryLoaded = false;
+    final emptyEntry = MediaListEntryModel.empty();
+    emit(
+      state.copyWith(
+        selectedAnime: anime,
+        mediaListEntry: emptyEntry,
+        newMediaListEntry: emptyEntry,
+        characters: (false, []),
+        recommendations: (false, []),
+        episodesInfo: [],
+        alternateImage: '',
+      ),
+    );
+    _mediaListEntryNotifier.updateSelectedMediaListEntry(emptyEntry);
+    _episodesInfoNotifier.updateSelectedEpisodeInfo([]);
+    if (anime.id == -1) return;
+    _getAnimeDetails(state.loggedUser, anime, selectionVersion);
+    _getEpisodesDetails(state.loggedUser, anime, selectionVersion);
+  }
+
+  bool _isCurrentSelection(int selectionVersion) {
+    return !isClosed && selectionVersion == _selectionVersion;
   }
 
   void navigateBackToAnimePage(BuildContext context) {
@@ -231,6 +264,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   void openAnimeDetailsMediaEntryDialog(BuildContext context) {
+    if (!_mediaListEntryLoaded || isClosed) return;
     showWidgetDialogEffect(dialog: AnimeDetailsMediaEntryDialog(cubit: this));
   }
 
@@ -284,6 +318,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntry(BuildContext context) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
+    final selectionVersion = _selectionVersion;
     MediaListEntry desiredMediaListEntry = state.newMediaListEntry;
     MediaListEntry beforeUpdateMediaListEntry = state.mediaListEntry;
     try {
@@ -293,13 +329,16 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         state.selectedAnime,
         state.loggedUser,
       );
+      if (!_isCurrentSelection(selectionVersion)) return;
       _reloadNotifier.emitReload(ReloadType.animeMediaListEntryUpdated);
       if (desiredMediaListEntry.status != beforeUpdateMediaListEntry.status) {
         _reloadNotifier.emitReload(ReloadType.homeMediaListEntryUpdated);
       }
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error updating Anime Entry:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error updating Anime Entry: $e", stackTrace: stackTrace);
     }
     if (!context.mounted) return;
@@ -307,6 +346,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryStatus(String? newStatus) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
     if (newStatus == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -319,6 +359,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryProgress(int? newProgress) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
     if (newProgress == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -331,6 +372,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryScore(double? newScore) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
     if (newScore == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -343,6 +385,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryRepeat(int? newRepeat) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
     if (newRepeat == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -355,6 +398,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryStartedAt(BuildContext context) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
+    final selectionVersion = _selectionVersion;
     DateTime? selectedDateTime = await showDatePicker(
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
@@ -375,7 +420,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         );
       },
     );
-    if (selectedDateTime == null) return;
+    if (selectedDateTime == null || !_isCurrentSelection(selectionVersion)) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         startedAt: [
@@ -391,6 +436,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryCompletedAt(BuildContext context) async {
+    if (!_mediaListEntryLoaded || isClosed) return;
+    final selectionVersion = _selectionVersion;
     DateTime? selectedDateTime = await showDatePicker(
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
@@ -411,7 +458,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         );
       },
     );
-    if (selectedDateTime == null) return;
+    if (selectedDateTime == null || !_isCurrentSelection(selectionVersion)) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         completedAt: [
@@ -427,29 +474,36 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> _getUserMediaListEntry(User loggedUser, Anime selectedAnime, {bool ignoreCache = false}) async {
-   try {
+    final selectionVersion = _selectionVersion;
+    try {
       _logger.i("Fetching User Media List Entry for ${state.selectedAnime.title.userPreferred}");
       MediaListEntry mediaListEntry = await _animeRepository.getMediaListEntry(
         selectedAnime,
         loggedUser,
         ignoreCache: ignoreCache,
       );
+      if (!_isCurrentSelection(selectionVersion)) return;
+      _mediaListEntryLoaded = true;
       emit(state.copyWith(mediaListEntry: mediaListEntry, newMediaListEntry: mediaListEntry));
       _mediaListEntryNotifier.updateSelectedMediaListEntry(mediaListEntry);
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching User Media List entry:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching User Media List Entry: $e", stackTrace: stackTrace);
     }
   }
 
-  Future<void> _getAnimeDetails(User loggedUser, Anime selectedAnime) async {
+  Future<void> _getAnimeDetails(User loggedUser, Anime selectedAnime, int selectionVersion) async {
     try {
       _logger.i("Fetching Anime Details for ${state.selectedAnime.title.userPreferred}");
       (bool, AnimeDetails) animeDetails = await _animeRepository.getAnimeDetails(
         selectedAnime,
         loggedUser,
       );
+      if (!_isCurrentSelection(selectionVersion)) return;
+      _mediaListEntryLoaded = animeDetails.$1;
       emit(
         state.copyWith(
           characters: (animeDetails.$2.characters.isNotEmpty, animeDetails.$2.characters),
@@ -466,12 +520,15 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           1,
           loggedUser,
         );
+        if (!_isCurrentSelection(selectionVersion)) return;
         emit(state.copyWith(recommendations: (trendingAnimes.$1, trendingAnimes.$2.shuffled(Random()))));
       }
-      _getAlternativeImage(loggedUser, selectedAnime);
+      _getAlternativeImage(loggedUser, selectedAnime, selectionVersion);
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Anime details:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Anime Details: $e", stackTrace: stackTrace);
     }
   }
@@ -667,7 +724,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     }
   }
 
-  Future<void> _getAlternativeImage(User loggedUser, Anime selectedAnime) async {
+  Future<void> _getAlternativeImage(User loggedUser, Anime selectedAnime, int selectionVersion) async {
     try {
       _logger.i("Fetching Alternative Image for ${state.selectedAnime.title.userPreferred}");
       late String alternateImage;
@@ -682,15 +739,18 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           anilistId: -1,
         );
       }
+      if (!_isCurrentSelection(selectionVersion)) return;
       emit(state.copyWith(alternateImage: alternateImage));
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Alternative Image:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Alternative Image: $e", stackTrace: stackTrace);
     }
   }
 
-  Future<void> _getEpisodesDetails(User loggedUser, Anime selectedAnime) async {
+  Future<void> _getEpisodesDetails(User loggedUser, Anime selectedAnime, int selectionVersion) async {
     try {
       _logger.i("Fetching Episodes Details for ${state.selectedAnime.title.userPreferred}");
       late List<EpisodeInfo> episodesInfo;
@@ -705,11 +765,14 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
           anilistId: -1,
         );
       }
+      if (!_isCurrentSelection(selectionVersion)) return;
       emit(state.copyWith(episodesInfo: episodesInfo));
       _episodesInfoNotifier.updateSelectedEpisodeInfo(episodesInfo);
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Episodes details:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Episodes Details: $e", stackTrace: stackTrace);
     }
   }

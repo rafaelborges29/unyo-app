@@ -45,6 +45,8 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
   late StreamSubscription<User> _loggedUserSubscription;
   late StreamSubscription<MediaList> _selectedMediaListSubscription;
 
+  int _selectionVersion = 0;
+
   // Logger
   final Logger _logger = sl<Logger>();
 
@@ -101,20 +103,42 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
 
   void _init() {
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) {
+      final userChanged = state.loggedUser.id != loggedUser.id ||
+          state.loggedUser.settings.service != loggedUser.settings.service;
       emit(state.copyWith(loggedUser: loggedUser));
+      if (userChanged) {
+        _loadSelectedManga(state.selectedManga);
+      }
       if (!state.userLoaded) {
         _getMangaBanners(loggedUser);
         emit(state.copyWith(userLoaded: true));
       }
     });
     _selectedMangaSubscription = _selectedMangaNotifier.mangaStream.listen((manga) {
-      _getMangaDetails(state.loggedUser, manga);
-      emit(state.copyWith(selectedManga: manga));
+      _loadSelectedManga(manga);
     });
     _selectedMediaListSubscription = _selectedMediaListNotifier.mediaListStream.listen((mediaList) {
       emit(state.copyWith(selectedMediaList: mediaList));
     });
     _loadInstalledExtensions();
+  }
+
+  void _loadSelectedManga(Manga manga) {
+    final selectionVersion = ++_selectionVersion;
+    emit(
+      state.copyWith(
+        selectedManga: manga,
+        mediaListEntry: MediaListEntryModel.empty(),
+        characters: (false, []),
+        recommendations: (false, []),
+      ),
+    );
+    if (manga.id == -1) return;
+    _getMangaDetails(state.loggedUser, manga, selectionVersion);
+  }
+
+  bool _isCurrentSelection(int selectionVersion) {
+    return !isClosed && selectionVersion == _selectionVersion;
   }
 
   void navigateToMangaDetails(Manga manga, MediaList mediaList) {
@@ -166,13 +190,14 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
     }
   }
 
-  Future<void> _getMangaDetails(User loggedUser, Manga selectedManga) async {
+  Future<void> _getMangaDetails(User loggedUser, Manga selectedManga, int selectionVersion) async {
     try {
       _logger.i("Fetching Manga Details for ${state.selectedManga.title.userPreferred}");
       (bool, MangaDetails) mangaDetails = await _mangaRepository.getMangaDetails(
         selectedManga,
         loggedUser,
       );
+      if (!_isCurrentSelection(selectionVersion)) return;
       emit(
         state.copyWith(
           mediaListEntry: mangaDetails.$2.mediaListEntry,
@@ -185,11 +210,14 @@ class MangaDetailsCubit extends Cubit<MangaDetailsState> with EffectMixin<MangaD
       );
       if (mangaDetails.$2.recommendedMangas.isEmpty) {
         (bool, List<Manga>) trendingMangas = await _mangaRepository.getTrendingMangas(1, loggedUser);
+        if (!_isCurrentSelection(selectionVersion)) return;
         emit(state.copyWith(recommendations: (trendingMangas.$1, trendingMangas.$2.shuffled(Random()))));
       }
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Manga details:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
+      if (!_isCurrentSelection(selectionVersion)) return;
       handleError("Error fetching Manga Details: $e", stackTrace: stackTrace);
     }
   }
