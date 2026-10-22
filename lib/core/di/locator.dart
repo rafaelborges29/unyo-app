@@ -173,6 +173,7 @@ void setupLocator() async{
       sl<AnimeNotifier>(),
       sl<MangaNotifier>(),
       sl<MediaListNotifier>(),
+      sl<ReloadNotifier>(),
     ),
   );
   sl.registerFactory<CalendarCubit>(

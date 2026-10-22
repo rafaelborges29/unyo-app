@@ -285,7 +285,6 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
 
   Future<void> updateMediaListEntry(BuildContext context) async {
     MediaListEntry desiredMediaListEntry = state.newMediaListEntry;
-    MediaListEntry beforeUpdateMediaListEntry = state.mediaListEntry;
     try {
       _logger.i("Updating Media List Entry to $desiredMediaListEntry");
       await _animeRepository.updateMediaListEntry(
@@ -294,9 +293,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         state.loggedUser,
       );
       _reloadNotifier.emitReload(ReloadType.animeMediaListEntryUpdated);
-      if (desiredMediaListEntry.status != beforeUpdateMediaListEntry.status) {
-        _reloadNotifier.emitReload(ReloadType.homeMediaListEntryUpdated);
-      }
+      _reloadNotifier.emitReload(ReloadType.homeMediaListEntryUpdated);
     } on HttpServerException catch (e, stackTrace) {
       handleError("Error updating Anime Entry:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
