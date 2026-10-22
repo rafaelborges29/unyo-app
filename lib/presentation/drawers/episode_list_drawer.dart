@@ -56,7 +56,7 @@ class EpisodeListDrawer extends StatelessWidget {
           showDivider: i != 0,
           onPressed: ()
           {
-            context.read<VideoCubit>().navigateToEpisode(i);
+            context.read<VideoCubit>().navigateToEpisode(i + 1);
           }
         ),
       );

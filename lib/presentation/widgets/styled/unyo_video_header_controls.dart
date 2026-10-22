@@ -39,8 +39,7 @@ class UnyoVideoHeaderControls extends StatelessWidget {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          "${state.selectedAnime.title.userPreferred}  -  Episode ${state.videoInfo
-                              .playlistIndex + 1}",
+                          "${state.selectedAnime.title.userPreferred}  -  Episode ${cubit.getEpisodeNumber(state.videoInfo.playlistIndex) ?? '?'}",
                           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                         ),
                       ],
