@@ -21,7 +21,10 @@ class MediaListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => sl<MediaListCubit>(), child: _MediaListListener(type: MediaTypeFactory.fromString(type!)));
+    return BlocProvider(
+      create: (context) => sl<MediaListCubit>(),
+      child: _MediaListListener(type: type == 'manga' ? MediaType.manga : MediaType.anime),
+    );
   }
 }
 
