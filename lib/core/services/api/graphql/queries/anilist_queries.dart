@@ -404,6 +404,7 @@ query Page(\$type: MediaType, \$mediaId: Int, \$page: Int, \$perPage: Int) {
           isFavourite
           isAdult
           episodes
+          chapters
           title {
             english
             native
