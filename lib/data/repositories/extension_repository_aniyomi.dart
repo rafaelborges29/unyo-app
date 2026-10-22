@@ -55,13 +55,14 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
           repoUrl,
           fromJson: _parseAniyomiRepoJsonList,
         );
+        final repoUri = Uri.parse(repoUrl);
         allExtensions.addAll(
           repositoryResponse.data.map(
             (aniyomiRepoJsonEntity) => ExtensionModel(
               name: aniyomiRepoJsonEntity.name.replaceFirst("Aniyomi: ", ""),
               pkg: aniyomiRepoJsonEntity.pkg,
-              apk: "${repoUrl.replaceFirst("index.min.json", "apk/")}${aniyomiRepoJsonEntity.apk}",
-              icon: "${repoUrl.replaceFirst("index.min.json", "icon/")}${aniyomiRepoJsonEntity.pkg}.png",
+              apk: repoUri.resolve("apk/${aniyomiRepoJsonEntity.apk}").toString(),
+              icon: repoUri.resolve("icon/${aniyomiRepoJsonEntity.pkg}.png").toString(),
               lang: aniyomiRepoJsonEntity.lang,
               version: aniyomiRepoJsonEntity.version,
               nsfw: aniyomiRepoJsonEntity.nsfw.toInt(),
@@ -85,13 +86,14 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
           repoUrl,
           fromJson: _parseTachiyomiRepoJsonList,
         );
+        final repoUri = Uri.parse(repoUrl);
         allExtensions.addAll(
           repositoryResponse.data.map(
             (tachiyomiRepoJsonEntity) => ExtensionModel(
               name: tachiyomiRepoJsonEntity.name.replaceFirst("Tachiyomi: ", ""),
               pkg: tachiyomiRepoJsonEntity.pkg,
-              apk: "${repoUrl.replaceFirst("index.min.json", "apk/")}${tachiyomiRepoJsonEntity.apk}",
-              icon: "${repoUrl.replaceFirst("index.min.json", "icon/")}${tachiyomiRepoJsonEntity.pkg}.png",
+              apk: repoUri.resolve("apk/${tachiyomiRepoJsonEntity.apk}").toString(),
+              icon: repoUri.resolve("icon/${tachiyomiRepoJsonEntity.pkg}.png").toString(),
               lang: tachiyomiRepoJsonEntity.lang,
               version: tachiyomiRepoJsonEntity.version,
               nsfw: tachiyomiRepoJsonEntity.nsfw.toInt(),
