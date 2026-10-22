@@ -18,7 +18,7 @@ class AnizipMappings {
   factory AnizipMappings.fromJson(Map<String, dynamic> json) {
     return AnizipMappings(
         title: TitleModel(
-            romaji: json['titles']?['ja'] ?? '',
+            romaji: json['titles']?['x-jat'] ?? '',
             english: json['titles']?['en'] ?? '',
             nativeTitle: json['titles']?['ja'] ?? '',
             userPreferred: json['titles']?['x-jat'] ?? ''
@@ -41,7 +41,7 @@ class AnizipMappings {
             id: anizipEpisodeInfo.tvdbId,
             episodeNumber: anizipEpisodeInfo.episodeNumber,
             title: TitleModel(
-                romaji: anizipEpisodeInfo.title.ja,
+                romaji: anizipEpisodeInfo.title.xJat,
                 english: anizipEpisodeInfo.title.en,
                 nativeTitle: anizipEpisodeInfo.title.ja,
                 userPreferred: anizipEpisodeInfo.title.xJat
