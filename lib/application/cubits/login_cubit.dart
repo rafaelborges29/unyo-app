@@ -163,9 +163,15 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
       _themeService.updateThemeFromColors(
         loggedUser: user,
         useWallpaperAsThemeColor: true,
-        primary: wallpaperColors[0],
-        secondary: wallpaperColors[1],
-        tertiary: wallpaperColors[2],
+        primary: wallpaperColors.isEmpty
+            ? _themeService.defaultPrimaryColor
+            : wallpaperColors[0],
+        secondary: wallpaperColors.isEmpty
+            ? _themeService.defaultSecondaryColor
+            : wallpaperColors[1],
+        tertiary: wallpaperColors.isEmpty
+            ? _themeService.defaultTertiaryColor
+            : wallpaperColors[2],
       );
     } else {
       _themeService.updateThemeFromColors(
