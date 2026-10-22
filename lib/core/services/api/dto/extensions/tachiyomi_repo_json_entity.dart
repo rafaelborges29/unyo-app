@@ -9,7 +9,7 @@ class TachiyomiRepoJsonEntity {
 	late String pkg = '';
 	late String apk = '';
 	late String lang = '';
-	late double code;
+	double? code;
 	late String version = '';
 	late double nsfw;
 	late List<TachiyomiRepoJsonSources> sources = [];

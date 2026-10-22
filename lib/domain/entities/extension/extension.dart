@@ -15,6 +15,7 @@ abstract class Extension {
   final String icon;
   final String lang;
   final String version;
+  final int? versionCode;
   final int nsfw;
   final String type;
   final String repositoryUrl;
@@ -26,6 +27,7 @@ abstract class Extension {
     required this.icon,
     required this.lang,
     required this.version,
+    this.versionCode,
     required this.nsfw,
     required this.type,
     required this.repositoryUrl,
@@ -33,7 +35,7 @@ abstract class Extension {
 
   @override
   String toString() {
-    return 'Extension{name: $name, pkg: $pkg, apk: $apk, icon: $icon, lang: $lang, version: $version, nsfw: $nsfw, type: $type, repositoryUrl: $repositoryUrl}';
+    return 'Extension{name: $name, pkg: $pkg, apk: $apk, icon: $icon, lang: $lang, version: $version, versionCode: $versionCode, nsfw: $nsfw, type: $type, repositoryUrl: $repositoryUrl}';
   }
 }
 
@@ -50,6 +52,7 @@ abstract class ExtensionModel with _$ExtensionModel implements Extension {
     @HiveField(6) required int nsfw,
     @HiveField(7) required String type,
     @HiveField(8) @Default("") String repositoryUrl,
+    @HiveField(9) int? versionCode,
   }) = _ExtensionModel;
 
   factory ExtensionModel.empty() => const ExtensionModel(
