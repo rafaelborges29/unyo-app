@@ -44,6 +44,9 @@ abstract class TorrentStatus {
 
 @freezed
 abstract class TorrentStatusModel with _$TorrentStatusModel implements TorrentStatus {
+  // Freezed forwards this annotation to the generated implementation.
+  // ignore: invalid_annotation_target
+  @JsonSerializable(fieldRename: FieldRename.snake)
   const factory TorrentStatusModel({
     required String hash,
     required String name,

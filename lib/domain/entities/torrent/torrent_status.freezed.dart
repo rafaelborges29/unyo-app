@@ -221,8 +221,8 @@ return $default(_that.hash,_that.name,_that.title,_that.poster,_that.category,_t
 }
 
 /// @nodoc
-@JsonSerializable()
 
+@JsonSerializable(fieldRename: FieldRename.snake)
 class _TorrentStatusModel implements TorrentStatusModel {
   const _TorrentStatusModel({required this.hash, required this.name, required this.title, required this.poster, required this.category, required this.stat, this.statString, this.downloadSpeed, this.uploadSpeed, this.activePeers, this.totalPeers, this.connectedSeeders, this.torrentSize, this.preloadedBytes, this.preloadSize, final  List<TorrentFileStat> fileStats = const <TorrentFileStat>[]}): _fileStats = fileStats;
   factory _TorrentStatusModel.fromJson(Map<String, dynamic> json) => _$TorrentStatusModelFromJson(json);
