@@ -3,6 +3,7 @@ import 'package:unyo/domain/entities/extension/preference_item.dart';
 import 'package:unyo/domain/entities/user/user.dart';
 
 abstract class ExtensionRepository {
+  Future<void> initializeExtensions();
   Future<Set<Extension>> getAvailableAnimeExtensions(User loggedUser);
   Future<Set<Extension>> getAvailableMangaExtensions(User loggedUser);
   Future<Set<Extension>> getInstalledAnimeExtensions(User loggedUser);

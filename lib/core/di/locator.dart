@@ -258,8 +258,7 @@ void setupLocator() async{
 
 void setupLocatorAfterHiveInit() {
   sl.registerSingleton<ExtensionRepositoryAniyomi>(
-    ExtensionRepositoryAniyomi(
-      sl<UserNotifier>(instanceName: config.loggedUserNotifier),
-    ),
+    ExtensionRepositoryAniyomi(),
+    dispose: (repository) => repository.dispose(),
   );
 }
