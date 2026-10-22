@@ -211,7 +211,9 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         case AnilistUserModel anilistUserModel:
           SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
           Map<String, Extension> mediaExtensionsConfigUpdated = Map.from(userSettings.mediaExtensionConfigs);
-          mediaExtensionsConfigUpdated.addAll({state.selectedAnime.id.toString(): selectedExtension});
+          mediaExtensionsConfigUpdated.addAll({
+            '${userSettings.service.name}:anime:${state.selectedAnime.id}': selectedExtension,
+          });
           await _userRepositoryAnilist.updateUserInfo(
             anilistUserModel.copyWith(
               settings: userSettings.copyWith(mediaExtensionConfigs: mediaExtensionsConfigUpdated),
@@ -731,7 +733,9 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       switch (loggedUser) {
         case AnilistUserModel anilistUserModel:
           SettingsModel userSettings = anilistUserModel.settings as SettingsModel;
-          Extension? selectedExtension = userSettings.mediaExtensionConfigs[selectedAnime.id.toString()];
+          // Keep legacy bare-ID entries intact; their metadata provider is unknown.
+          Extension? selectedExtension =
+              userSettings.mediaExtensionConfigs['${userSettings.service.name}:anime:${selectedAnime.id}'];
           if (selectedExtension != null) {
             selectAnimeExtension(selectedExtension.name);
           }
