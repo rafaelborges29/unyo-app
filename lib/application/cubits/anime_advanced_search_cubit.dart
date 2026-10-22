@@ -93,82 +93,42 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
 
   Future<void> updateSearchQuery(String query) async {
     emit(state.copyWith(searchQuery: query));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating search query $e", stackTrace: stackTrace);
-      handleError("Error updating search query", stackTrace: stackTrace);
-    }
+    await _performAnimeAdvancedSearch();
   }
 
   void updateGenres(List<String> genres) {
     emit(state.copyWith(selectedGenres: genres));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating selected genres $e", stackTrace: stackTrace);
-      handleError("Error updating selected genres", stackTrace: stackTrace);
-    }
+    _performAnimeAdvancedSearch();
   }
 
   void updateSearchSortOption(String sortOption) {
     emit(state.copyWith(selectedSearchSortOption: sortOption));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating search sortOption $e", stackTrace: stackTrace);
-      handleError("Error updating search sortOption", stackTrace: stackTrace);
-    }
+    _performAnimeAdvancedSearch();
   }
 
   void updateSearchSortOrder(String sortOrder) {
     emit(state.copyWith(selectedSearchOrder: sortOrder));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating search sortOrder $e", stackTrace: stackTrace);
-      handleError("Error updating search sortOrder", stackTrace: stackTrace);
-    }
+    _performAnimeAdvancedSearch();
   }
 
   Future<void> updateSelectedYear(String? year) async {
     emit(state.copyWith(selectedYear: year));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating year $e", stackTrace: stackTrace);
-      handleError("Error updating year", stackTrace: stackTrace);
-    }
+    await _performAnimeAdvancedSearch();
   }
 
   Future<void> updateSelectedSeason(String? season) async {
     emit(state.copyWith(selectedSeason: season));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating season $e", stackTrace: stackTrace);
-      handleError("Error updating season", stackTrace: stackTrace);
-    }
+    await _performAnimeAdvancedSearch();
   }
 
   Future<void> updateSelectedFormat(String? format) async {
     emit(state.copyWith(selectedFormat: format));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating format $e", stackTrace: stackTrace);
-      handleError("Error updating format", stackTrace: stackTrace);
-    }
+    await _performAnimeAdvancedSearch();
   }
 
   Future<void> updateSelectedAiringStatus(String? airingStatus) async {
     emit(state.copyWith(selectedAiringStatus: airingStatus));
-    try {
-      _performAnimeAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating airing status $e", stackTrace: stackTrace);
-      handleError("Error updating airing status", stackTrace: stackTrace);
-    }
+    await _performAnimeAdvancedSearch();
   }
 
   Future<void> _getLoggedUserServiceFilters(User loggedUser) async {
@@ -195,17 +155,22 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
   }
 
   Future<void> _performAnimeAdvancedSearch() async {
-    List<Anime> searchResults = await _animeRepository.performAnimeAdvancedSearch(
-      state.searchQuery,
-      state.selectedGenres,
-      state.selectedSeason,
-      state.selectedFormat,
-      int.tryParse(state.selectedYear ?? ''),
-      state.selectedAiringStatus,
-      "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
-      1,
-      state.loggedUser
-    );
-    emit(state.copyWith(searchResults: searchResults));
+    try {
+      List<Anime> searchResults = await _animeRepository.performAnimeAdvancedSearch(
+        state.searchQuery,
+        state.selectedGenres,
+        state.selectedSeason,
+        state.selectedFormat,
+        int.tryParse(state.selectedYear ?? ''),
+        state.selectedAiringStatus,
+        "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
+        1,
+        state.loggedUser
+      );
+      emit(state.copyWith(searchResults: searchResults));
+    } catch (e, stackTrace) {
+      _logger.e("Error performing anime advanced search $e", stackTrace: stackTrace);
+      handleError("Error performing anime advanced search", stackTrace: stackTrace);
+    }
   }
 }
