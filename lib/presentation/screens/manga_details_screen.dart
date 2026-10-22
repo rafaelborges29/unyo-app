@@ -43,9 +43,7 @@ class _MangaDetailsListener extends StatelessWidget {
           );
         }
       },
-      child: BlocBuilder<MangaDetailsCubit, MangaDetailsState>(
-        builder: (context, state) => const _MangaDetailsView(),
-      ),
+      child: const _MangaDetailsView(),
     );
   }
 }
@@ -68,27 +66,25 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
     super.dispose();
   }
 
-  List<Widget> _getEpisodeButtonsWidgets(MangaDetailsState state) {
-    int numChapters = state.selectedManga.chapters;
-    if (numChapters == 0) {
-      return [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 80.h),
-            const Text(
-              "Nothing to see here! Come back later :D",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ];
-    }
-    List<Widget> episodeButtons = [];
-    for (int i = 0; i < numChapters; i++) {
-      episodeButtons.add(
-        UnyoEpisodeButton(
+  Widget _buildEpisodeList(MangaDetailsState state) {
+    final numChapters = state.selectedManga.chapters;
+    return ListView.builder(
+      itemCount: numChapters == 0 ? 1 : numChapters,
+      itemBuilder: (context, i) {
+        if (numChapters == 0) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 80.h),
+              const Text(
+                "Nothing to see here! Come back later :D",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                maxLines: 3,
+              ),
+            ],
+          );
+        }
+        return UnyoEpisodeButton(
           mainTitle: "Chapter ${i + 1}",
           secondaryTitle: "${state.selectedManga.title.userPreferred} Chapter ${i + 1}",
           episodeImageUrl: state.selectedManga.bannerImage != "" ? state.selectedManga.bannerImage : state.selectedManga.coverImage,
@@ -96,10 +92,9 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
           progress: state.mediaListEntry.progress,
           released: numChapters,
           showDivider: i != 0,
-        ),
-      );
-    }
-    return episodeButtons;
+        );
+      },
+    );
   }
 
   @override
@@ -288,7 +283,7 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
                             ),
                           ),
                           SizedBox(height: 15.h),
-                          Expanded(child: ListView(children: [..._getEpisodeButtonsWidgets(state)])),
+                          Expanded(child: _buildEpisodeList(state)),
                         ],
                       ),
                     ),

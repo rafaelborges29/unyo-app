@@ -62,31 +62,27 @@ class AnimeCardList extends StatelessWidget {
         SizedBox(
           height: 260,
           width: 1.sw - 140,
-          child: ListView(
+          child: ListView.builder(
             scrollDirection: Axis.horizontal,
             controller: controller,
-            children: [
-              ...animeList.map(
-                (anime) => MediaCard(
-                  title: anime.title.romaji,
-                  score: anime.averageScore,
-                  coverImage: anime.coverImage,
-                  onPressed:
-                      () => onPressed(
-                        anime,
-                        MediaListModel(
-                          name: listTitle,
-                          mediaType: MediaType.anime,
-                        ),
-                      ),
-                  status: anime.status,
-                  year: anime.startDate,
-                  format: anime.format,
-                  tag: "$listTitle-${anime.id}",
+            itemCount: animeList.length,
+            itemBuilder: (context, index) {
+              final anime = animeList[index];
+              return MediaCard(
+                title: anime.title.romaji,
+                score: anime.averageScore,
+                coverImage: anime.coverImage,
+                onPressed: () => onPressed(
+                  anime,
+                  MediaListModel(name: listTitle, mediaType: MediaType.anime),
                 ),
-              ),
-              // TODO loadMore Widget
-            ],
+                status: anime.status,
+                year: anime.startDate,
+                format: anime.format,
+                tag: "$listTitle-${anime.id}",
+              );
+            },
+            // TODO loadMore Widget
           ),
         ),
       ],

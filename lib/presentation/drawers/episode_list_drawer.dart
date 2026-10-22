@@ -16,27 +16,25 @@ class EpisodeListDrawer extends StatelessWidget {
 
   const EpisodeListDrawer({super.key, required this.cubit});
 
-  List<Widget> _getEpisodeButtonsWidgets(BuildContext context, VideoState state) {
-    int numEpisodes = max(state.selectedAnime.episodes, state.episodesInfo.length);
-    if (numEpisodes == 0) {
-      return [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(height: 80.h),
-            const Text(
-              "Nothing to see here! Come back later :D",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 3,
-            ),
-          ],
-        ),
-      ];
-    }
-    List<Widget> episodeButtons = [];
-    for (int i = 0; i < numEpisodes; i++) {
-      episodeButtons.add(
-        UnyoEpisodeButton(
+  Widget _buildEpisodeList(VideoState state) {
+    final numEpisodes = max(state.selectedAnime.episodes, state.episodesInfo.length);
+    return ListView.builder(
+      itemCount: numEpisodes == 0 ? 1 : numEpisodes,
+      itemBuilder: (context, i) {
+        if (numEpisodes == 0) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: 80.h),
+              const Text(
+                "Nothing to see here! Come back later :D",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                maxLines: 3,
+              ),
+            ],
+          );
+        }
+        return UnyoEpisodeButton(
           mainTitle: "Episode ${i + 1}",
           secondaryTitle: state.episodesInfo.length > i
               ? (state.episodesInfo[i].title.userPreferred != ""
@@ -54,14 +52,12 @@ class EpisodeListDrawer extends StatelessWidget {
               ? (state.selectedAnime.nextAiringEpisode.episode - 1)
               : numEpisodes,
           showDivider: i != 0,
-          onPressed: ()
-          {
+          onPressed: () {
             context.read<VideoCubit>().navigateToEpisode(i);
-          }
-        ),
-      );
-    }
-    return episodeButtons;
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -103,7 +99,7 @@ class EpisodeListDrawer extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.h),
-                    Expanded(child: ListView(children: _getEpisodeButtonsWidgets(context, state))),
+                    Expanded(child: _buildEpisodeList(state)),
                   ],
                 ),
               ),
