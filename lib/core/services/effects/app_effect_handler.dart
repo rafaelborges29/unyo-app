@@ -9,6 +9,7 @@ import 'package:logger/logger.dart';
 // Internal dependencies
 import 'package:unyo/application/effects/app_effects.dart';
 import 'package:unyo/core/di/locator.dart';
+import 'package:unyo/core/router/app_router.gr.dart';
 
 class AppEffectHandler {
   final _logger = sl<Logger>();
@@ -38,6 +39,8 @@ class AppEffectHandler {
         _handleShowSnackbarEffect(context, showSnackBarEffect);
       case ReplaceRouteEffect replaceRouteEffect:
         _handleReplaceRouteEffect(replaceRouteEffect, context);
+      case ResetSessionEffect():
+        _handleResetSessionEffect(context);
       case NavigateRouteEffect navigateRouteEffect:
         _handleNavigateRouteEffect(navigateRouteEffect, context);
       case PushRouteEffect pushRouteEffect:
@@ -136,6 +139,18 @@ class AppEffectHandler {
     AutoRouter.of(context).replacePath(
       effect.routeName.replaceFirst("/", ""),
       onFailure: _handleRouteFailure,
+    );
+  }
+
+  void _handleResetSessionEffect(BuildContext context) {
+    _logger.d("Handling ResetSessionEffect");
+    final router = AutoRouter.of(context);
+    // Dialogs use the root navigator, outside the authenticated child stack.
+    Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+    router.replaceAll(
+      [const LoginRoute()],
+      onFailure: _handleRouteFailure,
+      updateExistingRoutes: false,
     );
   }
 
