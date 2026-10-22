@@ -41,6 +41,17 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   UserRepositoryAnilist(this._newUserNotifier, this._loggedUserNotifier);
 
+  Future<String> getUserScoreFormat(User user) async {
+    final response = await _anilistGraphQLService.query<ViewerGraphqlEntity>(
+      query: anilist_queries.viewerQuery,
+      fromJson: ViewerGraphqlEntity.fromJson,
+      headers: {"Authorization": "Bearer ${(user as AnilistUserModel).accessToken}"},
+      ignoreCache: true,
+    );
+    throwIfGraphQlError(response);
+    return response.data.viewer.mediaListOptions.scoreFormat;
+  }
+
   @override
   Future<List<User>> fetchAllLoggedInUsers() async {
     _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
