@@ -13,8 +13,6 @@ import 'package:unyo/application/states/login_state.dart';
 import 'package:unyo/core/di/locator.dart';
 import 'package:unyo/core/enums/login_card_type.dart';
 import 'package:unyo/core/notification/user_notifier.dart';
-import 'package:unyo/core/services/api/dto/anilist/auth_token_dto.dart';
-import 'package:unyo/core/services/api/http/api_response.dart';
 import 'package:unyo/core/theme/color_image_service.dart';
 import 'package:unyo/core/theme/theme_service.dart';
 import 'package:unyo/data/models/models.dart';
@@ -105,7 +103,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
       switch (user) {
         case AnilistUserModel anilistUserModel:
           _logger.i("Logging in Anilist User: ${anilistUserModel.name}");
-          await _loginAnilistUser(anilistUserModel);
+          if (!await _loginAnilistUser(anilistUserModel)) return;
         case LocalUserModel localUserModel:
           _logger.i("Logging in Local User: ${localUserModel.name}");
         default:
@@ -180,28 +178,16 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
     emit(state.copyWith(availableUsers: users));
   }
 
-  Future<void> _loginAnilistUser(AnilistUserModel user) async {
+  Future<bool> _loginAnilistUser(AnilistUserModel user) async {
     DateTime dateTime = JwtDecoder.getExpirationDate(user.accessToken);
     if (dateTime.isBefore(DateTime.now())) {
-      _logger.w("Anilist User token is expired, getting new accessToken");
-      try {
-        ApiResponse<AuthTokenEntity> authToken = await _userRepositoryAnilist
-            .getAuthToken(user.accessCode);
-        User updatedUser = user.copyWith(
-          accessToken: authToken.data.accessToken,
-          refreshToken: authToken.data.refreshToken,
-        );
-        _loggedUserNotifier.updateUser(updatedUser);
-        return;
-      } catch (e, stackTrace) {
-        handleError(
-          "Error refreshing user expired token: $e",
-          stackTrace: stackTrace,
-        );
-        return;
-      }
+      _logger.w("Anilist User token is expired, starting authorization");
+      await _userRepositoryAnilist.attemptCreateUser();
+      // The authorization callback updates the account card for selection again.
+      return false;
     }
     _loggedUserNotifier.updateUser(user);
+    return true;
   }
 
   Future<void> _createAnilistUser() async {
