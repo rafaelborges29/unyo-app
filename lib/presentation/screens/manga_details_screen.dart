@@ -168,7 +168,6 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
                                               UnyoBannerIcon(
                                                 text: TextUtils.extractYearFromStartDate(
                                                   state.selectedManga.startDate,
-                                                  state.loggedUser,
                                                 ),
                                                 iconData: Icons.calendar_month_rounded,
                                               ),
