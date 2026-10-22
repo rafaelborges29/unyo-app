@@ -119,7 +119,8 @@ We appreciate your contributions! 😊
 
 ## License
 
-This project is licensed under the **GNU Public License version 3.0**. An extra clause states that you must mention this project if you use any portion of its code.
+The Unyo user interface (`unyo-app`) is licensed under the **BSD 3-Clause License**; see [LICENSE](LICENSE). Compiled releases include proprietary `unyo-core` and `unyo-lib` components and are subject to the [End User License Agreement](EULA.txt).
+
 This project contains two very small portions of code from [mangayomi](https://github.com/kodjodevf/mangayomi): the torrent server and an audio slider. A big shout-out to the developer!
 
 ## Disclaimer
