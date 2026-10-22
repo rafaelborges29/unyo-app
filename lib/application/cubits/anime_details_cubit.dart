@@ -354,11 +354,35 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     }
   }
 
+  DateTime? _parseMediaListEntryDate(List<String> parts) {
+    if (parts.length != 3) return null;
+    final day = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final year = int.tryParse(parts[2]);
+    // Do not turn unknown components or invalid dates into a different date.
+    if (day == null ||
+        month == null ||
+        year == null ||
+        day < 1 ||
+        day > 31 ||
+        month < 1 ||
+        month > 12 ||
+        year < 1 ||
+        year > 9999) {
+      return null;
+    }
+    final date = DateTime(year, month, day);
+    return date.day == day && date.month == month && date.year == year ? date : null;
+  }
+
   Future<void> updateMediaListEntryStartedAt(BuildContext context) async {
+    final initialDate = _parseMediaListEntryDate(state.newMediaListEntry.startedAt);
+    final lastDate = DateTime.now().add(const Duration(days: 365));
     DateTime? selectedDateTime = await showDatePicker(
       context: context,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: DateTime(1),
+      lastDate: initialDate != null && initialDate.isAfter(lastDate) ? initialDate : lastDate,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -391,10 +415,13 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryCompletedAt(BuildContext context) async {
+    final initialDate = _parseMediaListEntryDate(state.newMediaListEntry.completedAt);
+    final lastDate = DateTime.now().add(const Duration(days: 365));
     DateTime? selectedDateTime = await showDatePicker(
       context: context,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initialDate,
+      firstDate: DateTime(1),
+      lastDate: initialDate != null && initialDate.isAfter(lastDate) ? initialDate : lastDate,
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
