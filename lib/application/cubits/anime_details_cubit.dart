@@ -319,7 +319,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryProgress(int? newProgress) async {
-    if (newProgress == null) return;
+    if (newProgress == null || newProgress < 0) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         progress: newProgress,
