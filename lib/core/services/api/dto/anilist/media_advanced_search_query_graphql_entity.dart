@@ -61,7 +61,10 @@ class MediaAdvancedSearchQueryGraphqlPageMedia {
 	late MediaAdvancedSearchQueryGraphqlPageMediaNextAiringEpisode nextAiringEpisode = MediaAdvancedSearchQueryGraphqlPageMediaNextAiringEpisode();
 	late String status = '';
 
-	MediaAdvancedSearchQueryGraphqlPageMedia();
+	MediaAdvancedSearchQueryGraphqlPageMedia() {
+		endDate = MediaAdvancedSearchQueryGraphqlPageMediaEndDate();
+		startDate = MediaAdvancedSearchQueryGraphqlPageMediaStartDate();
+	}
 
 	factory MediaAdvancedSearchQueryGraphqlPageMedia.fromJson(Map<String, dynamic> json) => $MediaAdvancedSearchQueryGraphqlPageMediaFromJson(json);
 

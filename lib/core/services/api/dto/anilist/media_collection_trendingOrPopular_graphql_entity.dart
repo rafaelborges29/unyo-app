@@ -61,7 +61,10 @@ class MediaCollectionTrendingOrPopularGraphqlDtoPageMedia {
 	late int averageScore = 0;
 	late MediaCollectionTrendingOrPopularGraphqlDtoPageMediaTitle title = MediaCollectionTrendingOrPopularGraphqlDtoPageMediaTitle();
 
-	MediaCollectionTrendingOrPopularGraphqlDtoPageMedia();
+	MediaCollectionTrendingOrPopularGraphqlDtoPageMedia() {
+		endDate = MediaCollectionTrendingOrPopularGraphqlDtoPageMediaEndDate();
+		startDate = MediaCollectionTrendingOrPopularGraphqlDtoPageMediaStartDate();
+	}
 
 	factory MediaCollectionTrendingOrPopularGraphqlDtoPageMedia.fromJson(Map<String, dynamic> json) => $MediaCollectionTrendingOrPopularGraphqlDtoPageMediaFromJson(json);
 
