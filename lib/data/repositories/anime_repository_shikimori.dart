@@ -175,7 +175,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
         .query<AnimePopularQueryEntity>(
       query: shikimori_queries.animeUpcomingOrPopularQuery,
       fromJson: AnimePopularQueryEntity.fromJson,
-      variables: {"page": page, "limit": 50, "order": "aired_on"},
+      variables: {"page": page, "limit": 50, "order": "aired_on", "status": "anons"},
       // headers: graphQlHeaders,
       ignoreCache: ignoreCache,
     );
