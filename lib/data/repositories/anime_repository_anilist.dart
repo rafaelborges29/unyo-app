@@ -172,7 +172,7 @@ class AnimeRepositoryAnilist with RepositoryMixin implements AnimeRepository {
     }
     String localeTag = loggedUser.settings.language;
     Map<String, List<Anime>> calendarReleases = {};
-    for (Anime anime in calendarReleasePortion ?? calendarReleasesList) {
+    for (Anime anime in [...calendarReleasesList, ...(calendarReleasePortion ?? [])]) {
       DateTime episodeRelease = DateTime.fromMillisecondsSinceEpoch(
         int.parse(anime.nextAiringEpisode.airingAt) * 1000,
       );
