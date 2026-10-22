@@ -63,9 +63,12 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
   Logger get logger => _logger;
 
   @override
-  Future<void> close() {
-    _newUserCreatedSubscription.cancel();
-    return super.close();
+  Future<void> close() async {
+    await Future.wait([
+      _newUserCreatedSubscription.cancel(),
+      _userRepositoryAnilist.cancelCreateUser(),
+      super.close(),
+    ]);
   }
 
   void _init() {
@@ -135,7 +138,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
       case LoginCardType.local:
         _logger.i("Attempting to create Local User");
     }
-    if (context.mounted) closeDialogEffect(context);
+    if (!isClosed && context.mounted) closeDialogEffect(context);
   }
 
   Future<void> fetchAllUsers() async {
@@ -208,7 +211,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
     try {
       await _userRepositoryAnilist.attemptCreateUser();
     } catch (e, stackTrace) {
-      handleError("Error creating user $e", stackTrace: stackTrace);
+      if (!isClosed) handleError("Error creating user $e", stackTrace: stackTrace);
     }
   }
 }
