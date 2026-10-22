@@ -18,7 +18,8 @@ class HttpService {
   final Duration timeout;
   final RetryOptions retryOptions;
   final Duration cacheTtl = const Duration(minutes: 20);
-  final Map<String, (int, dynamic)> _apiResponseCache = {};
+  final Map<String, (int, dynamic, String)> _apiResponseCache = {};
+  final Map<String, int> _cacheVersions = {};
 
   HttpService({
     this.timeout = const Duration(seconds: 10),
@@ -49,19 +50,23 @@ class HttpService {
         _deleteCacheEntry(cacheKey);
       }
     }
+    // Reads started before invalidation must not repopulate the cache.
+    final cacheVersion = _cacheVersions[endpoint];
     ApiResponse<T> apiResponse = await _request(
       'GET',
       endpoint,
       fromJson: fromJson,
       headers: headers,
     );
-    _cacheResponse(
-      apiResponse,
-      'GET',
-      endpoint,
-      headers: headers,
-      fromJson: fromJson,
-    );
+    if (cacheVersion == _cacheVersions[endpoint]) {
+      _cacheResponse(
+        apiResponse,
+        'GET',
+        endpoint,
+        headers: headers,
+        fromJson: fromJson,
+      );
+    }
     return apiResponse;
   }
 
@@ -70,11 +75,12 @@ class HttpService {
     Map<String, String>? headers,
     Object? body,
     bool ignoreCache = false,
+    bool useCache = true,
     required T Function(Map<String, dynamic>) fromJson,
   }) async {
     _logger.d("POST request to $endpoint attempting to return instance of $T");
     final encodedBody = json.encode(body);
-    if (!ignoreCache) {
+    if (useCache && !ignoreCache) {
       ApiResponse<T>? cachedApiResponse = _getCachedResponse<T>(
         'POST',
         endpoint,
@@ -92,6 +98,7 @@ class HttpService {
         _deleteCacheEntry(cacheKey);
       }
     }
+    final cacheVersion = _cacheVersions[endpoint];
     ApiResponse<T> apiResponse = await _request(
       'POST',
       endpoint,
@@ -99,14 +106,16 @@ class HttpService {
       headers: headers,
       body: encodedBody,
     );
-    _cacheResponse(
-      apiResponse,
-      'POST',
-      endpoint,
-      headers: headers,
-      body: encodedBody,
-      fromJson: fromJson
-    );
+    if (useCache && cacheVersion == _cacheVersions[endpoint]) {
+      _cacheResponse(
+        apiResponse,
+        'POST',
+        endpoint,
+        headers: headers,
+        body: encodedBody,
+        fromJson: fromJson
+      );
+    }
     return apiResponse;
   }
 
@@ -122,7 +131,7 @@ class HttpService {
     if (_apiResponseCache.containsKey(cacheKey)) {
       _logger.d("Cached response found for $endpoint");
       try {
-        final (expiry, cachedResponse as ApiResponse<T>) =
+        final (expiry, cachedResponse as ApiResponse<T>, _) =
         _apiResponseCache[cacheKey]!;
         if (expiry < DateTime.now().millisecondsSinceEpoch) {
           _logger.d(
@@ -165,6 +174,7 @@ class HttpService {
         (
           DateTime.now().millisecondsSinceEpoch + cacheTtl.inMilliseconds,
           response,
+          endpoint,
         );
   }
 
@@ -294,9 +304,14 @@ class HttpService {
     };
   }
 
+  void invalidateCache(String endpoint) {
+    _cacheVersions[endpoint] = (_cacheVersions[endpoint] ?? 0) + 1;
+    _apiResponseCache.removeWhere((_, entry) => entry.$3 == endpoint);
+  }
+
   void _deleteCacheEntry(String cacheKey) {
     if (_apiResponseCache.containsKey(cacheKey)) {
-      (int, dynamic)? cacheEntry = _apiResponseCache.remove(cacheKey);
+      (int, dynamic, String)? cacheEntry = _apiResponseCache.remove(cacheKey);
       _logger.d("Deleted cache entry ${cacheEntry?.$2} with expiration ${cacheEntry?.$1}");
       return;
     }
@@ -306,7 +321,7 @@ class HttpService {
   String _cacheToString() {
     return _apiResponseCache.entries.map((entry) {
       final cacheKey = entry.key;
-      final (expiry, cachedResponse) = entry.value;
+      final (expiry, cachedResponse, _) = entry.value;
       return "CacheKey: $cacheKey, Expiry: ${DateTime.fromMillisecondsSinceEpoch(expiry)}, CachedResponse: $cachedResponse";
     }).join("\n");
   }
