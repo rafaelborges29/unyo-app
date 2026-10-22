@@ -42,7 +42,7 @@ class _SettingsListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<SettingsCubit>().clearEffects,
+            context.read<SettingsCubit>().consumeEffect,
           );
         }
       },

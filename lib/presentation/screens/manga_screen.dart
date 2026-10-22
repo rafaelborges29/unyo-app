@@ -38,7 +38,7 @@ class _MangaListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<MangaCubit>().clearEffects,
+            context.read<MangaCubit>().consumeEffect,
           );
         }
       },

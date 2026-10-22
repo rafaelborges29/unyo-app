@@ -36,7 +36,7 @@ class _ExtensionsListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<ExtensionsCubit>().clearEffects,
+            context.read<ExtensionsCubit>().consumeEffect,
           );
         }
       },

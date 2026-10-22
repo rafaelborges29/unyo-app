@@ -24,12 +24,13 @@ class AppEffectHandler {
   void handleEffects(
     BuildContext context,
     List<AppEffect> effects,
-    void Function() clearAppEffects,
+    bool Function(AppEffect) consumeEffect,
   ) {
     for (var effect in effects) {
-      handle(effect, context);
+      if (consumeEffect(effect)) {
+        handle(effect, context);
+      }
     }
-    clearAppEffects();
   }
 
   void handle(AppEffect effect, BuildContext context) {

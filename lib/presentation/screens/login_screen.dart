@@ -37,7 +37,7 @@ class _LoginListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<LoginCubit>().clearEffects,
+            context.read<LoginCubit>().consumeEffect,
           );
         }
       },

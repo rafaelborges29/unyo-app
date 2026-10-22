@@ -40,7 +40,7 @@ class _MangaAdvancedSearchListener extends StatelessWidget {
           sl<AppEffectHandler>().handleEffects(
             context,
             state.effects,
-            context.read<MangaAdvancedSearchCubit>().clearEffects,
+            context.read<MangaAdvancedSearchCubit>().consumeEffect,
           );
         }
       },
