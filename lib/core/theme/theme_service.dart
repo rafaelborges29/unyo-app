@@ -26,8 +26,8 @@ class ThemeService {
   Color get defaultSecondaryColor => _defaultSecondaryColor;
   Color get defaultTertiaryColor => _defaultTertiaryColor;
 
-  void updateThemeFromColors(
-      {required User? loggedUser, required Color primary, required bool? useWallpaperAsThemeColor, Color? secondary, Color? tertiary}) {
+  Future<void> updateThemeFromColors(
+      {required User? loggedUser, required Color primary, required bool? useWallpaperAsThemeColor, Color? secondary, Color? tertiary}) async {
     final newTheme = _defaultTheme.copyWith(
       colorScheme: ColorScheme.dark(
         primary: Color.lerp(primary, Colors.black, 0.1) ?? primary,
@@ -43,31 +43,29 @@ class ThemeService {
     if (loggedUser == null || useWallpaperAsThemeColor == null) {
       return;
     }
-    _updateUserThemeSettings(loggedUser, primary, useWallpaperAsThemeColor, newTheme.colorScheme);
+    await _updateUserThemeSettings(loggedUser, primary, useWallpaperAsThemeColor, newTheme.colorScheme);
   }
 
-  void updateThemeFromColorScheme(
-      {required User logedUser, required bool useWallpaperAsThemeColor, required ColorScheme newcolorScheme}) {
+  Future<void> updateThemeFromColorScheme(
+      {required User logedUser, required bool useWallpaperAsThemeColor, required ColorScheme newcolorScheme}) async {
     final newTheme = _defaultTheme.copyWith(
       colorScheme: newcolorScheme,
     );
     _themeSubject.add(newTheme);
-      _updateUserThemeSettings(logedUser, newcolorScheme.primary, useWallpaperAsThemeColor, newcolorScheme);
+    await _updateUserThemeSettings(logedUser, newcolorScheme.primary, useWallpaperAsThemeColor, newcolorScheme);
   }
 
   Future<void> _updateUserThemeSettings(User loggedUser, Color primary, bool useWallpaperAsThemeColor, ColorScheme colorScheme) async {
-    Settings updatedSettings = (loggedUser.settings as SettingsModel).copyWith(
+    SettingsModel updateSettings(SettingsModel settings) => settings.copyWith(
       themeColor: primary,
-      useWallpaperAsThemeColor: useWallpaperAsThemeColor
+      useWallpaperAsThemeColor: useWallpaperAsThemeColor,
     );
     switch (loggedUser) {
       case AnilistUserModel anilistUserModel:
-        AnilistUserModel updatedAnilistUserModel = anilistUserModel.copyWith(settings: updatedSettings);
-        await _userRepositoryAnilist.updateUserInfo(updatedAnilistUserModel);
+        await _userRepositoryAnilist.updateUserInfo(anilistUserModel, updateSettings: updateSettings);
         break;
       case LocalUserModel localUserModel:
-        LocalUserModel updatedLocalUserModel = localUserModel.copyWith(settings: updatedSettings);
-        await _userRepositoryLocal.updateUserInfo(updatedLocalUserModel);
+        await _userRepositoryLocal.updateUserInfo(localUserModel, updateSettings: updateSettings);
         break;
     }
   }

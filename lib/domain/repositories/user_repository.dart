@@ -1,11 +1,12 @@
 import 'package:unyo/domain/entities/media/anime.dart';
 import 'package:unyo/domain/entities/media/manga.dart';
 import 'package:unyo/domain/entities/user/user.dart';
+import 'package:unyo/domain/entities/user/settings.dart';
 
 abstract class UserRepository {
   Future<List<User>> fetchAllLoggedInUsers();
   Future<void> attemptCreateUser();
-  Future<void> updateUserInfo(User user);
+  Future<void> updateUserInfo(User user, {SettingsModel Function(SettingsModel)? updateSettings});
   Future<List<Anime>> getUserWatchingList(User user);
   Future<List<Manga>> getUserReadingList(User user);
   Future<Map<String, List<Anime>>> getUserAnimeLists(User user);

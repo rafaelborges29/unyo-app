@@ -78,10 +78,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> updateMediaMetadataService(String? newService) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        service: MediaServiceFactory.getEnumMediaService(newService),
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          service: MediaServiceFactory.getEnumMediaService(newService),
+        ),
       );
-      await _updateUserInfo(updatedSettings);
       _reloadNotifier.emitReload(ReloadType.newMetadataService);
     } catch (e, stackTrace) {
       logger.e("Error updating media metadata service $e", stackTrace: stackTrace);
@@ -91,10 +92,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> updateEpisodeMetadataService(String? newService) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        episodeService: EpisodeMediaServiceFactory.getEnumEpisodeService(newService),
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          episodeService: EpisodeMediaServiceFactory.getEnumEpisodeService(newService),
+        ),
       );
-      await _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error updating episode metadata service $e", stackTrace: stackTrace);
       handleError("Error updating episode metadata service", stackTrace: stackTrace);
@@ -106,10 +108,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
       return;
     }
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        mediaTitleLanguage: newLanguage,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          mediaTitleLanguage: newLanguage,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error updating media title language $e", stackTrace: stackTrace);
       handleError("Error updating media title language", stackTrace: stackTrace);
@@ -121,10 +124,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
       return;
     }
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        episodeTitleLanguage: newLanguage,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          episodeTitleLanguage: newLanguage,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error updating episode title language $e", stackTrace: stackTrace);
       handleError("Error updating episode title language", stackTrace: stackTrace);
@@ -133,10 +137,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> enableNSFWContent(bool enable) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        enableNsfwContent: enable,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          enableNsfwContent: enable,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling NSFW content $e", stackTrace: stackTrace);
       handleError("Error enabling/disabling NSFW content", stackTrace: stackTrace);
@@ -145,10 +150,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> enableDiscordRichPresence(bool enable) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        enableDiscordRichPresence: enable,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          enableDiscordRichPresence: enable,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling Discord Rich Presence $e", stackTrace: stackTrace);
       handleError("Error enabling/disabling Discord Rich Presence", stackTrace: stackTrace);
@@ -157,10 +163,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> enableAutomaticallySkipOpening(bool enable) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        automaticallySkipOpening: enable,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          automaticallySkipOpening: enable,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling automatically skip opening $e", stackTrace: stackTrace);
       handleError("Error enabling/disabling automatically skip opening", stackTrace: stackTrace);
@@ -169,10 +176,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> enableAutomaticallySkipEnding(bool enable) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        automaticallySkipEnding: enable,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          automaticallySkipEnding: enable,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling automatically skip ending $e", stackTrace: stackTrace);
       handleError("Error enabling/disabling automatically skip ending", stackTrace: stackTrace);
@@ -181,10 +189,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> enableAutoPlayNextEpisode(bool enable) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        autoPlayNextEpisode: enable,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          autoPlayNextEpisode: enable,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling auto play next episode $e", stackTrace: stackTrace);
       handleError("Error enabling/disabling auto play next episode", stackTrace: stackTrace);
@@ -193,10 +202,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> enableOpenSubtitlesIntegration(bool enable) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        enableOpenSubtitlesIntegration: enable,
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          enableOpenSubtitlesIntegration: enable,
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error enabling/disabling OpenSubtitles integration $e", stackTrace: stackTrace);
       handleError("Error enabling/disabling OpenSubtitles integration", stackTrace: stackTrace);
@@ -216,7 +226,7 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
         case LocalUserModel localUserModel:
           _logger.d("Getting local user's theme");
       }
-      _themeService.updateThemeFromColors(
+      await _themeService.updateThemeFromColors(
         loggedUser: state.loggedUser,
         useWallpaperAsThemeColor: true,
         primary: wallpaperColors[0],
@@ -231,10 +241,11 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
 
   Future<void> manualSkipTimeUpdate(double newSkipTime) async {
     try {
-      Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-        manualSkipTime: newSkipTime.toInt(),
+      await _updateUserInfo(
+        (settings) => settings.copyWith(
+          manualSkipTime: newSkipTime.toInt(),
+        ),
       );
-      _updateUserInfo(updatedSettings);
     } catch (e, stackTrace) {
       logger.e("Error updating manual skip time $e", stackTrace: stackTrace);
       handleError("Error updating manual skip time", stackTrace: stackTrace);
@@ -248,15 +259,16 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
         height: 400.h,
         title: "Aniyomi extensions repository URL",
         currentRepositoriesUrls: state.loggedUser.settings.aniyomiExtensionsRepositories,
-        onSubmitted: (newExtensionsRepositories) {
+        onSubmitted: (newExtensionsRepositories) async {
           if (newExtensionsRepositories.isEmpty) {
             return;
           }
           try {
-            Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-              aniyomiExtensionsRepositories: newExtensionsRepositories.where((url) => _isValidRepoUrl(url)).toList(),
+            await _updateUserInfo(
+              (settings) => settings.copyWith(
+                aniyomiExtensionsRepositories: newExtensionsRepositories.where((url) => _isValidRepoUrl(url)).toList(),
+              ),
             );
-            _updateUserInfo(updatedSettings);
           } catch (e, stackTrace) {
             logger.e("Error updating Aniyomi extensions URL $e", stackTrace: stackTrace);
             handleError("Error updating Aniyomi extensions URL", stackTrace: stackTrace);
@@ -273,15 +285,16 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
         height: 400.h,
         title: "Tachiyomi extensions repository URL",
         currentRepositoriesUrls: state.loggedUser.settings.tachiyomiExtensionsRepositories,
-        onSubmitted: (newExtensionsRepositories) {
+        onSubmitted: (newExtensionsRepositories) async {
           if (newExtensionsRepositories.isEmpty) {
             return;
           }
           try {
-            Settings updatedSettings = (state.loggedUser.settings as SettingsModel).copyWith(
-              tachiyomiExtensionsRepositories: newExtensionsRepositories.where((url) => _isValidRepoUrl(url)).toList(),
+            await _updateUserInfo(
+              (settings) => settings.copyWith(
+                tachiyomiExtensionsRepositories: newExtensionsRepositories.where((url) => _isValidRepoUrl(url)).toList(),
+              ),
             );
-            _updateUserInfo(updatedSettings);
           } catch (e, stackTrace) {
             logger.e("Error updating Tachiyomi extensions URL $e", stackTrace: stackTrace);
             handleError("Error updating Tachiyomi extensions URL", stackTrace: stackTrace);
@@ -325,13 +338,17 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
                         LightUnyoButton(
                           text: "Confirm",
                           maxHeight: 50,
-                          onPressed: () {
-                            _themeService.updateThemeFromColors(
-                              loggedUser: state.loggedUser,
-                              primary: _selectedColor,
-                              useWallpaperAsThemeColor: false,
-                            );
-                            Navigator.of(dialogContext).pop();
+                          onPressed: () async {
+                            try {
+                              await _themeService.updateThemeFromColors(
+                                loggedUser: state.loggedUser,
+                                primary: _selectedColor,
+                                useWallpaperAsThemeColor: false,
+                              );
+                              if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+                            } catch (e, stackTrace) {
+                              handleError("Error updating theme color: $e", stackTrace: stackTrace);
+                            }
                           },
                         ),
                       ],
@@ -346,21 +363,14 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
     );
   }
 
-  Future<void> _updateUserInfo(Settings settings) async {
-    try {
-      switch (state.loggedUser) {
-        case AnilistUserModel anilistUserModel:
-          AnilistUserModel updatedAnilistUserModel = anilistUserModel.copyWith(settings: settings);
-          await _userRepositoryAnilist.updateUserInfo(updatedAnilistUserModel);
-          break;
-        case LocalUserModel localUserModel:
-          LocalUserModel updatedLocalUserModel = localUserModel.copyWith(settings: settings);
-          await _userRepositoryLocal.updateUserInfo(updatedLocalUserModel);
-          break;
-      }
-    } catch (e, stackTrace) {
-      logger.e("Error updating user info $e", stackTrace: stackTrace);
-      handleError("Error updating user info", stackTrace: stackTrace);
+  Future<void> _updateUserInfo(SettingsModel Function(SettingsModel) updateSettings) async {
+    switch (state.loggedUser) {
+      case AnilistUserModel anilistUserModel:
+        await _userRepositoryAnilist.updateUserInfo(anilistUserModel, updateSettings: updateSettings);
+        break;
+      case LocalUserModel localUserModel:
+        await _userRepositoryLocal.updateUserInfo(localUserModel, updateSettings: updateSettings);
+        break;
     }
   }
 
