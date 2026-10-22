@@ -16,6 +16,7 @@ import 'package:unyo/core/notification/user_notifier.dart';
 import 'package:unyo/core/services/api/dto/extensions/aniyomi_repo_json_entity.dart';
 import 'package:unyo/core/services/api/dto/extensions/tachiyomi_repo_json_entity.dart';
 import 'package:unyo/core/services/api/http/api_response.dart';
+import 'package:unyo/core/services/api/http/http_exception.dart';
 import 'package:unyo/core/services/api/http/http_service.dart';
 import 'package:unyo/domain/entities/extension/extension.dart';
 import 'package:unyo/domain/entities/extension/preference_item.dart';
@@ -72,6 +73,9 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
         );
       } catch (e, stackTrace) {
         _logger.w("Failed to fetch anime extensions from $repoUrl", stackTrace: stackTrace);
+        throw Exception(
+          "Failed to fetch anime extensions from $repoUrl: ${e is HttpServerException ? 'HTTP ${e.statusCode}' : e}",
+        );
       }
     }
     return allExtensions;
@@ -102,6 +106,9 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
         );
       } catch (e, stackTrace) {
         _logger.w("Failed to fetch manga extensions from $repoUrl", stackTrace: stackTrace);
+        throw Exception(
+          "Failed to fetch manga extensions from $repoUrl: ${e is HttpServerException ? 'HTTP ${e.statusCode}' : e}",
+        );
       }
     }
     return allExtensions;
