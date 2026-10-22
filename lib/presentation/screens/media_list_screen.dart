@@ -12,6 +12,7 @@ import 'package:unyo/domain/entities/media/manga.dart';
 import 'package:unyo/domain/entities/list/media_list.dart';
 import 'package:unyo/presentation/widgets/styled/media_card.dart';
 import 'package:unyo/presentation/widgets/text/texts.dart';
+import 'package:unyo/presentation/widgets/text/text_utils.dart';
 
 @RoutePage()
 class MediaListScreen extends StatelessWidget {
@@ -152,7 +153,7 @@ class _MediaListViewState extends State<_MediaListView> with TickerProviderState
                             (context, index) => SizedBox(
                               width: 165,
                               child: MediaCard(
-                                title: animeList != null ? animeList[index].title.userPreferred : mangaList![index].title.userPreferred,
+                                title: TextUtils.resolveTitle(animeList != null ? animeList[index].title : mangaList![index].title, state.loggedUser.settings.mediaTitleLanguage),
                                 score: animeList != null ? animeList[index].averageScore : mangaList![index].averageScore,
                                 coverImage: animeList != null ? animeList[index].coverImage : mangaList![index].coverImage,
                                 onPressed:

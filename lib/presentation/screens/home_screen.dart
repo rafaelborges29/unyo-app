@@ -138,6 +138,7 @@ class _HomeViewState extends State<_HomeView> {
                 ),
                 const SizedBox(height: 40),
                 AnimeCardList(
+                  titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                   listTitle: "Continue Watching",
                   animeList: state.continueWatching,
                   controller: continueWatchingController,
@@ -146,6 +147,7 @@ class _HomeViewState extends State<_HomeView> {
                 ),
                 const SizedBox(height: 30),
                 MangaCardList(
+                  titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                   listTitle: "Continue Reading",
                   mangaList: state.continueReading,
                   controller: continueReadingController,

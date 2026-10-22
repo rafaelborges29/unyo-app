@@ -6,10 +6,12 @@ import 'package:unyo/domain/entities/media/anime.dart';
 import 'package:unyo/domain/entities/list/media_list.dart';
 import 'package:unyo/presentation/widgets/styled/media_card.dart';
 import 'package:unyo/presentation/widgets/styled/media_list_arrows.dart';
+import 'package:unyo/presentation/widgets/text/text_utils.dart';
 
 class AnimeRecommendationCardList extends StatelessWidget {
   final void Function(Anime, MediaList) onPressed;
   final String listTitle;
+  final String titleLanguage;
   final List<Anime> animeList;
   final ScrollController controller;
   final bool loadMore;
@@ -18,6 +20,7 @@ class AnimeRecommendationCardList extends StatelessWidget {
     super.key,
     required this.onPressed,
     required this.listTitle,
+    required this.titleLanguage,
     required this.animeList,
     required this.controller,
     required this.loadMore,
@@ -70,7 +73,7 @@ class AnimeRecommendationCardList extends StatelessWidget {
               children: [
                 ...animeList.map(
                   (anime) => MediaCard(
-                    title: anime.title.romaji,
+                    title: TextUtils.resolveTitle(anime.title, titleLanguage),
                     score: anime.averageScore,
                     coverImage: anime.coverImage,
                     onPressed: () => onPressed(anime, MediaListModel(name: listTitle, mediaType: MediaType.anime)),

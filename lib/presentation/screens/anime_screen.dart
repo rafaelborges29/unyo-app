@@ -84,6 +84,7 @@ class _AnimeViewState extends State<_AnimeView> {
             children: [
               SizedBox(height: 20.0.h),
               UnyoBannerCarousel(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 animeList: state.banners,
                 onTapAnime: context.read<AnimeCubit>().navigateToAnimeDetails,
               ),
@@ -111,6 +112,7 @@ class _AnimeViewState extends State<_AnimeView> {
               ),
               const SizedBox(height: 40,),
               state.recentlyReleased.$1 ? AnimeCardList(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 listTitle: "Recently Released",
                 animeList: state.recentlyReleased.$2,
                 controller: recentlyReleasedController,
@@ -119,6 +121,7 @@ class _AnimeViewState extends State<_AnimeView> {
               ) : const SizedBox.shrink(),
               const SizedBox(height: 30),
               state.trending.$1 ? AnimeCardList(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 listTitle: "Trending Animes",
                 animeList: state.trending.$2,
                 controller: trendingController,
@@ -127,6 +130,7 @@ class _AnimeViewState extends State<_AnimeView> {
               ) : const SizedBox.shrink(),
               const SizedBox(height: 30),
               state.recentlyCompleted.$1 ? AnimeCardList(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 listTitle: "Recently Completed Animes",
                 animeList: state.recentlyCompleted.$2,
                 controller: recentlyCompletedController,
@@ -135,6 +139,7 @@ class _AnimeViewState extends State<_AnimeView> {
               ) : const SizedBox.shrink(),
               const SizedBox(height: 30),
               state.popular.$1 ? AnimeCardList(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 listTitle: "Popular Animes",
                 animeList: state.popular.$2,
                 controller: popularController,
@@ -143,6 +148,7 @@ class _AnimeViewState extends State<_AnimeView> {
               ) : const SizedBox.shrink(),
               const SizedBox(height: 30),
               state.upcoming.$1 ? AnimeCardList(
+                titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                 listTitle: "Upcoming Animes",
                 animeList: state.upcoming.$2,
                 controller: upcomingController,

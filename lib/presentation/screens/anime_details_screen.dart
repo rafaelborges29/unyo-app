@@ -93,9 +93,7 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
           mainTitle: "Episode ${i + 1}",
           secondaryTitle:
               state.episodesInfo.length > i
-                  ? (state.episodesInfo[i].title.userPreferred != ""
-                      ? state.episodesInfo[i].title.userPreferred
-                      : "")
+                  ? TextUtils.resolveTitle(state.episodesInfo[i].title, state.loggedUser.settings.episodeTitleLanguage)
                   : "",
           episodeImageUrl:
               state.episodesInfo.length > i
@@ -160,7 +158,7 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                                       state.selectedAnime.coverImage != ""
                                           ? state.selectedAnime.coverImage
                                           : state.alternateImage,
-                                  title: state.selectedAnime.title.userPreferred,
+                                  title: TextUtils.resolveTitle(state.selectedAnime.title, state.loggedUser.settings.mediaTitleLanguage),
                                   status: state.selectedAnime.status,
                                   tag: "${state.selectedMediaList.name}-${state.selectedAnime.id}",
                                 ),
@@ -281,6 +279,7 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                                 SizedBox(height: 20.h),
                                 state.recommendations.$1
                                     ? AnimeRecommendationCardList(
+                                      titleLanguage: state.loggedUser.settings.mediaTitleLanguage,
                                       onPressed: context.read<AnimeDetailsCubit>().navigateToAnimeDetails,
                                       listTitle: "Recommended Animes",
                                       animeList: state.recommendations.$2,

@@ -1,7 +1,30 @@
 import 'package:unyo/core/enums/service.dart';
+import 'package:unyo/domain/entities/media/title.dart';
 import 'package:unyo/domain/entities/user/user.dart' show User;
 
 class TextUtils {
+  static String resolveTitle(Title title, String language) {
+    final preferred = switch (language.toLowerCase()) {
+      'english' || 'en' => title.english,
+      'native' => title.nativeTitle,
+      // Shikimori currently maps Russian titles to the romaji field.
+      'romaji' || 'russian' => title.romaji,
+      _ => title.userPreferred,
+    };
+    for (final candidate in [
+      preferred,
+      title.userPreferred,
+      title.romaji,
+      title.english,
+      title.nativeTitle,
+    ]) {
+      if (candidate.trim().isNotEmpty) {
+        return candidate;
+      }
+    }
+    return '';
+  }
+
   static String parseHtmlToPlainText(String html) {
     if (html.isEmpty) {
       return '';

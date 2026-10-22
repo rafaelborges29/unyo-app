@@ -15,6 +15,7 @@ import 'package:unyo/presentation/widgets/styled/unyo_sort_widget.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_textfield.dart';
 import 'package:unyo/presentation/widgets/text/text_body_large.dart';
 import 'package:unyo/presentation/widgets/text/text_headline_medium.dart';
+import 'package:unyo/presentation/widgets/text/text_utils.dart';
 
 @RoutePage()
 class AnimeAdvancedSearchScreen extends StatelessWidget {
@@ -215,7 +216,7 @@ class _AnimeAdvancedSearchViewState extends State<_AnimeAdvancedSearchView> {
                       (context, index) => SizedBox(
                         width: 165,
                         child: MediaCard(
-                          title: state.searchResults[index].title.userPreferred,
+                          title: TextUtils.resolveTitle(state.searchResults[index].title, state.loggedUser.settings.mediaTitleLanguage),
                           score: state.searchResults[index].averageScore,
                           coverImage: state.searchResults[index].coverImage,
                           onPressed:
