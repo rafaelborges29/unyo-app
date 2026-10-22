@@ -69,6 +69,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   late StreamSubscription<MediaList> _selectedMediaListSubscription;
   late StreamSubscription<ReloadType> _reloadSubscription;
 
+  bool _isSavingMediaListEntry = false;
+
   // Logger
   final Logger _logger = sl<Logger>();
 
@@ -231,6 +233,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   void openAnimeDetailsMediaEntryDialog(BuildContext context) {
+    if (_isSavingMediaListEntry || isClosed) return;
     showWidgetDialogEffect(dialog: AnimeDetailsMediaEntryDialog(cubit: this));
   }
 
@@ -284,6 +287,8 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntry(BuildContext context) async {
+    if (_isSavingMediaListEntry || isClosed) return;
+    _isSavingMediaListEntry = true;
     MediaListEntry desiredMediaListEntry = state.newMediaListEntry;
     MediaListEntry beforeUpdateMediaListEntry = state.mediaListEntry;
     try {
@@ -301,12 +306,15 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       handleError("Error updating Anime Entry:", responseBody: e.message, stackTrace: stackTrace);
     } catch (e, stackTrace) {
       handleError("Error updating Anime Entry: $e", stackTrace: stackTrace);
+    } finally {
+      _isSavingMediaListEntry = false;
     }
     if (!context.mounted) return;
     popRouteEffect(context);
   }
 
   Future<void> updateMediaListEntryStatus(String? newStatus) async {
+    if (_isSavingMediaListEntry || isClosed) return;
     if (newStatus == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -319,6 +327,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryProgress(int? newProgress) async {
+    if (_isSavingMediaListEntry || isClosed) return;
     if (newProgress == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -331,6 +340,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryScore(double? newScore) async {
+    if (_isSavingMediaListEntry || isClosed) return;
     if (newScore == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -343,6 +353,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryRepeat(int? newRepeat) async {
+    if (_isSavingMediaListEntry || isClosed) return;
     if (newRepeat == null) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
@@ -355,6 +366,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryStartedAt(BuildContext context) async {
+    if (_isSavingMediaListEntry || isClosed) return;
     DateTime? selectedDateTime = await showDatePicker(
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
@@ -375,7 +387,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         );
       },
     );
-    if (selectedDateTime == null) return;
+    if (selectedDateTime == null || _isSavingMediaListEntry || isClosed) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         startedAt: [
@@ -391,6 +403,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
   }
 
   Future<void> updateMediaListEntryCompletedAt(BuildContext context) async {
+    if (_isSavingMediaListEntry || isClosed) return;
     DateTime? selectedDateTime = await showDatePicker(
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
@@ -411,7 +424,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
         );
       },
     );
-    if (selectedDateTime == null) return;
+    if (selectedDateTime == null || _isSavingMediaListEntry || isClosed) return;
     try {
       MediaListEntry updatedMediaListEntry = (state.newMediaListEntry as MediaListEntryModel).copyWith(
         completedAt: [

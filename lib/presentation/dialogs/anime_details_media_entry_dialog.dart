@@ -8,18 +8,26 @@ import 'package:unyo/presentation/widgets/styled/light_unyo_button.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_dropdown.dart';
 import 'package:unyo/presentation/widgets/styled/unyo_slider.dart';
 
-class AnimeDetailsMediaEntryDialog extends StatelessWidget {
+class AnimeDetailsMediaEntryDialog extends StatefulWidget {
   final AnimeDetailsCubit cubit;
 
   const AnimeDetailsMediaEntryDialog({super.key, required this.cubit});
 
   @override
+  State<AnimeDetailsMediaEntryDialog> createState() => _AnimeDetailsMediaEntryDialogState();
+}
+
+class _AnimeDetailsMediaEntryDialogState extends State<AnimeDetailsMediaEntryDialog> {
+  bool _isSaving = false;
+
+  @override
   Widget build(BuildContext context) {
     return BlocProvider.value(
-      value: cubit,
+      value: widget.cubit,
       child: BlocBuilder<AnimeDetailsCubit, AnimeDetailsState>(
-        builder:
-            (context, state) => Dialog(
+        builder: (context, state) {
+          final dialog =
+            Dialog(
               backgroundColor: const Color.fromARGB(255, 30, 30, 30),
               child: SizedBox(
                 width: 906.w,
@@ -129,9 +137,30 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              DarkUnyoButton(text: "Cancel", maxHeight: 50, onPressed: () => context.read<AnimeDetailsCubit>().popRouteEffect(context)),
+                              DarkUnyoButton(
+                                text: "Cancel",
+                                maxHeight: 50,
+                                isEnabled: !_isSaving,
+                                onPressed: () {
+                                  if (_isSaving) return;
+                                  context.read<AnimeDetailsCubit>().popRouteEffect(context);
+                                },
+                              ),
                               SizedBox(width: 25.0.w),
-                              LightUnyoButton(text: "Confirm", maxHeight: 50, onPressed: () => context.read<AnimeDetailsCubit>().updateMediaListEntry(context)),
+                              LightUnyoButton(
+                                text: _isSaving ? "Saving..." : "Confirm",
+                                maxHeight: 50,
+                                isEnabled: !_isSaving,
+                                onPressed: () async {
+                                  if (_isSaving) return;
+                                  setState(() => _isSaving = true);
+                                  try {
+                                    await context.read<AnimeDetailsCubit>().updateMediaListEntry(context);
+                                  } finally {
+                                    if (mounted) setState(() => _isSaving = false);
+                                  }
+                                },
+                              ),
                             ],
                           )
                         ],
@@ -140,7 +169,15 @@ class AnimeDetailsMediaEntryDialog extends StatelessWidget {
                   ),
                 ),
               ),
+            );
+          return PopScope(
+            canPop: !_isSaving,
+            child: AbsorbPointer(
+              absorbing: _isSaving,
+              child: ExcludeFocus(excluding: _isSaving, child: dialog),
             ),
+          );
+        },
       ),
     );
   }
