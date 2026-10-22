@@ -106,6 +106,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
         case AnilistUserModel anilistUserModel:
           _logger.i("Logging in Anilist User: ${anilistUserModel.name}");
           await _loginAnilistUser(anilistUserModel);
+          if (isClosed) return;
         case LocalUserModel localUserModel:
           _logger.i("Logging in Local User: ${localUserModel.name}");
         default:
@@ -142,8 +143,10 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
     _logger.i("Fetching all logged in users");
     List<User> usersAvailableLocal =
         (await _userRepositoryLocal.fetchAllLoggedInUsers()).cast<User>();
+    if (isClosed) return;
     List<User> usersAvailableAnilist =
         (await _userRepositoryAnilist.fetchAllLoggedInUsers()).cast<User>();
+    if (isClosed) return;
     _updateAvailableUsers(usersAvailableAnilist + usersAvailableLocal);
   }
 
@@ -157,6 +160,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
               .getColorsFromPalleteGenerator(
             NetworkImage(anilistUserModel.bannerImage),
           );
+          if (isClosed) return;
         case LocalUserModel localUserModel:
           _logger.d("Getting local user's theme");
       }
@@ -187,6 +191,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
       try {
         ApiResponse<AuthTokenEntity> authToken = await _userRepositoryAnilist
             .getAuthToken(user.accessCode);
+        if (isClosed) return;
         User updatedUser = user.copyWith(
           accessToken: authToken.data.accessToken,
           refreshToken: authToken.data.refreshToken,

@@ -72,6 +72,7 @@ class CalendarCubit extends Cubit<CalendarState> with EffectMixin<CalendarState>
     try {
       _logger.i("Fetching calendar releases");
       Map<String, List<Anime>> animeCalendarReleases = await _animeRepository.getCalendarReleases(1, loggedUser);
+      if (isClosed) return;
       emit(
         state.copyWith(
           animeCalendarReleases: animeCalendarReleases,

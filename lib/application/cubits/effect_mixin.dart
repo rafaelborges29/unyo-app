@@ -21,6 +21,7 @@ mixin EffectMixin<State> on Cubit<State> {
   };
 
   void addEffect(AppEffect effect) {
+    if (isClosed) return;
     logger.d("Adding AppEffect: $effect");
     final current = state;
     final newEffects = [..._currentEffects, effect];
@@ -28,6 +29,7 @@ mixin EffectMixin<State> on Cubit<State> {
   }
 
   void clearEffects() {
+    if (isClosed) return;
     logger.d("Clearing all effects");
     emit(copyStateWithEffects(state, []));
   }
@@ -75,6 +77,7 @@ mixin EffectMixin<State> on Cubit<State> {
   }
 
   void popRouteEffect(BuildContext context) {
+    if (isClosed) return;
     logger.i("PopRoute attempted");
     AutoRouter.of(context).pop();
   }

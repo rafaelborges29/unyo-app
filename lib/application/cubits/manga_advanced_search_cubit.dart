@@ -163,6 +163,7 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
   Future<void> _getLoggedUserServiceFilters(User loggedUser) async {
     try {
       final filters = await _mangaRepository.getUserMangaAdvancedSearchFilters();
+      if (isClosed) return;
       emit(
         state.copyWith(
           genresFilters: (filters['genres']?.$1 ?? false, filters['genres']?.$2 ?? []),
@@ -183,16 +184,21 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
   }
 
   Future<void> _performMangaAdvancedSearch() async {
-    List<Manga> searchResults = await _mangaRepository.performMangaAdvancedSearch(
-      state.searchQuery,
-      state.selectedGenres,
-      state.selectedFormat,
-      state.selectedCountry,
-      state.selectedAiringStatus,
-      "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
-      1,
-      state.loggedUser
-    );
-    emit(state.copyWith(searchResults: searchResults));
+    try {
+      List<Manga> searchResults = await _mangaRepository.performMangaAdvancedSearch(
+        state.searchQuery,
+        state.selectedGenres,
+        state.selectedFormat,
+        state.selectedCountry,
+        state.selectedAiringStatus,
+        "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
+        1,
+        state.loggedUser
+      );
+      if (isClosed) return;
+      emit(state.copyWith(searchResults: searchResults));
+    } catch (e, stackTrace) {
+      handleError("Error performing manga advanced search: $e", stackTrace: stackTrace);
+    }
   }
 }

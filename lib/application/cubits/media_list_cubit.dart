@@ -93,8 +93,10 @@ class MediaListCubit extends Cubit<MediaListState>
           _logger.i("Fetching Anilist User lists");
           Map<String, List<Anime>> userAnimeLists = await _userRepositoryAnilist
               .getUserAnimeLists(user);
+          if (isClosed) return;
           Map<String, List<Manga>> userMangaLists = await _userRepositoryAnilist
               .getUserMangaLists(user);
+          if (isClosed) return;
           emit(
             state.copyWith(
               userAnimeLists: userAnimeLists,
