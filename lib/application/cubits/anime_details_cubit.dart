@@ -283,7 +283,7 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     );
   }
 
-  Future<void> updateMediaListEntry(BuildContext context) async {
+  Future<bool> updateMediaListEntry(BuildContext context) async {
     MediaListEntry desiredMediaListEntry = state.newMediaListEntry;
     MediaListEntry beforeUpdateMediaListEntry = state.mediaListEntry;
     try {
@@ -299,11 +299,13 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
       }
     } on HttpServerException catch (e, stackTrace) {
       handleError("Error updating Anime Entry:", responseBody: e.message, stackTrace: stackTrace);
+      return false;
     } catch (e, stackTrace) {
       handleError("Error updating Anime Entry: $e", stackTrace: stackTrace);
+      return false;
     }
-    if (!context.mounted) return;
-    popRouteEffect(context);
+    if (context.mounted) popRouteEffect(context);
+    return true;
   }
 
   Future<void> updateMediaListEntryStatus(String? newStatus) async {
