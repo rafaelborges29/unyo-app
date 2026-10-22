@@ -44,7 +44,7 @@ class HttpService {
         return cachedApiResponse;
       }
     } else {
-      if (_isCacheable(endpoint)) {
+      if (_isCacheable(endpoint, headers: headers)) {
         final cacheKey = "${'GET'.hashCode}${endpoint.hashCode}${json.encode(_cacheEnabledHeaders(headers)).hashCode}${null.hashCode}${fromJson.runtimeType.hashCode}";
         _deleteCacheEntry(cacheKey);
       }
@@ -87,7 +87,7 @@ class HttpService {
         return cachedApiResponse;
       }
     } else {
-      if (_isCacheable(endpoint)) {
+      if (_isCacheable(endpoint, headers: headers)) {
         final cacheKey = "${'POST'.hashCode}${endpoint.hashCode}${json.encode(_cacheEnabledHeaders(headers)).hashCode}${encodedBody.hashCode}${fromJson.runtimeType.hashCode}";
         _deleteCacheEntry(cacheKey);
       }
@@ -117,7 +117,7 @@ class HttpService {
     String? body,
     required T Function(Map<String, dynamic>) fromJson,
   }) {
-    if (!_isCacheable(endpoint)) return null;
+    if (!_isCacheable(endpoint, headers: headers)) return null;
     final cacheKey = "${method.hashCode}${endpoint.hashCode}${json.encode(_cacheEnabledHeaders(headers)).hashCode}${body.hashCode}${fromJson.runtimeType.hashCode}";
     if (_apiResponseCache.containsKey(cacheKey)) {
       _logger.d("Cached response found for $endpoint");
@@ -158,7 +158,7 @@ class HttpService {
       _logger.w("Not caching response for $endpoint due to client error with status code ${response.statusCode}");
       return;
     }
-    if (!_isCacheable(endpoint)) return;
+    if (!_isCacheable(endpoint, headers: headers)) return;
     _logger.d("Caching response for $endpoint");
     final cacheKey = "${method.hashCode}${endpoint.hashCode}${json.encode(_cacheEnabledHeaders(headers)).hashCode}${body.hashCode}${fromJson.runtimeType.hashCode}";
     _apiResponseCache[cacheKey] =
@@ -168,7 +168,12 @@ class HttpService {
         );
   }
 
-  bool _isCacheable(String endpoint) {
+  bool _isCacheable(String endpoint, {Map<String, String>? headers}) {
+    // Never read or store private responses in the shared cache, including
+    // responses that would otherwise remain available after logout.
+    if (headers?.keys.any((key) => key.toLowerCase() == 'authorization') ?? false) {
+      return false;
+    }
     if (config.cacheDisabledEndpoints.contains(endpoint)){
       _logger.w("Endpoint $endpoint is disabled for caching");
       return false;
