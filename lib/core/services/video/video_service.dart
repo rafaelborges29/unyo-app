@@ -185,12 +185,10 @@ class VideoService {
   }
 
   bool seekTo(Duration newPosition) {
-    if (newPosition > duration) {
-      _player.seek(position: duration.inMilliseconds, flags: _seekFlags);
-    } else if (newPosition < Duration.zero) {
-      _player.seek(position: 0, flags: _seekFlags);
-    }
-    _player.seek(position: newPosition.inMilliseconds, flags: _seekFlags);
+    final position = newPosition.inMilliseconds
+        .clamp(0, duration.inMilliseconds)
+        .toInt();
+    _player.seek(position: position, flags: _seekFlags);
     return true;
   }
 
