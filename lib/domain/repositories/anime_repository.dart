@@ -11,7 +11,7 @@ abstract class AnimeRepository {
   Future<(bool, List<Anime>)> getUpcomingAnimes(int page, User loggedUser, {bool ignoreCache = false});
   Future<Map<String, List<Anime>>> getCalendarReleases(int page, User loggedUser);
   Future<(bool, AnimeDetails)> getAnimeDetails(Anime selectedAnime, User loggedUser);
-  Future<Map<String, (bool, List<String>)>> getUserAnimeAdvancedSearchFilters();
+  Future<Map<String, (bool, List<String>)>> getUserAnimeAdvancedSearchFilters(User loggedUser);
   Future<List<Anime>> performAnimeAdvancedSearch(
     String query,
     List<String> selectedGenres,
