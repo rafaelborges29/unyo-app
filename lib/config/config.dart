@@ -24,8 +24,6 @@ const String shikimoriGraphQLEndpoint = 'https://shikimori.io/api/graphql';
 const String anizipBaseEndpoint = 'https://api.ani.zip';
 // Aniski API configuration
 const String aniskiBaseEndpoint = 'https://api.aniskip.com';
-// Torrent API configuration
-const String torrentServiceEndpoint = 'http://127.0.0.1:8090';
 // Cache configuration
 const String localhost = '127.0.0.1';
 const Set<String> cacheDisabledEndpoints = <String>{
