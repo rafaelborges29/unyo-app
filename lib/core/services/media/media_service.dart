@@ -20,6 +20,7 @@ class MediaServiceFactory {
     switch (serviceName?.toLowerCase()) {
       case 'anilist':
         return Service.anilist;
+      case 'mal':
       case 'myanimelist':
         return Service.mal;
       case 'kitsu':
