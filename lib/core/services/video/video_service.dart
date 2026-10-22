@@ -297,9 +297,12 @@ class VideoService {
       return url;
     }
     final cleanMagnet = _cleanMagnetUrl(url);
-    final hash = _extractHashFromMagnet(cleanMagnet);
     final status = await _torrentService.addTorrent(cleanMagnet);
-    _torrentHashes.add(status.hash);
+    final hash = status.hash;
+    if (!RegExp(r'^[0-9a-f]{40}$').hasMatch(hash)) {
+      throw Exception("Invalid torrent hash returned by server");
+    }
+    _torrentHashes.add(hash);
     if (status.stat >= 2 && status.fileStats.isNotEmpty) {
       final fileIndex = _selectFileIndex(status.fileStats, _episodeIndex);
       return _torrentService.getStreamUrl(hash, fileIndex);
@@ -353,25 +356,6 @@ class VideoService {
     } catch (e) {
       return magnet;
     }
-  }
-
-  String _extractHashFromMagnet(String magnet) {
-    try {
-      final uri = Uri.parse(magnet);
-      final xt = uri.queryParameters['xt'];
-      if (xt != null && xt.startsWith("urn:btih:")) {
-        return xt.substring("urn:btih:".length).toLowerCase();
-      }
-    } catch (e) {
-      _logger.w("Failed to parse magnet URI: $e");
-    }
-    // Fallback: try to extract 40-char hex hash from the string
-    final hexHashMatch = RegExp(r'([0-9a-fA-F]{40})').firstMatch(magnet);
-    if (hexHashMatch != null) {
-      return hexHashMatch.group(1)!.toLowerCase();
-    }
-    _logger.e("Could not extract infohash from magnet URI");
-    throw Exception("Could not extract infohash from magnet URI");
   }
 
   void _attemptDisposeTorrent() {
