@@ -37,6 +37,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
   // Services
   final ColorImageService _colorImageService;
   final ThemeService _themeService;
+  int _loginRequest = 0;
 
   LoginCubit(
     this._userRepositoryLocal,
@@ -101,6 +102,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
   }
 
   Future<void> loginUser(User user, BuildContext context) async {
+    final loginRequest = ++_loginRequest;
     try {
       switch (user) {
         case AnilistUserModel anilistUserModel:
@@ -116,10 +118,13 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
       }
       // Init User Extensions
       // _loadUserExtensions();
-      setUsersTheme(user);
+      if (isClosed || loginRequest != _loginRequest) return;
+      await setUsersTheme(user, loginRequest);
+      if (isClosed || loginRequest != _loginRequest) return;
       replaceRouteEffect(path: "/tabs");
       // close();
     } catch (e, stackTrace) {
+      if (isClosed || loginRequest != _loginRequest) return;
       handleError("Error logging in user: $e", stackTrace: stackTrace);
       return;
     }
@@ -147,7 +152,7 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
     _updateAvailableUsers(usersAvailableAnilist + usersAvailableLocal);
   }
 
-  void setUsersTheme(User user) async {
+  Future<void> setUsersTheme(User user, int loginRequest) async {
     List<Color> wallpaperColors = [];
     if (user.settings.useWallpaperAsThemeColor) {
       switch (user) {
@@ -160,17 +165,19 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
         case LocalUserModel localUserModel:
           _logger.d("Getting local user's theme");
       }
+      if (isClosed || loginRequest != _loginRequest) return;
+      // Login only renders the theme; settings are saved by SettingsCubit.
       _themeService.updateThemeFromColors(
-        loggedUser: user,
-        useWallpaperAsThemeColor: true,
+        loggedUser: null,
+        useWallpaperAsThemeColor: null,
         primary: wallpaperColors[0],
         secondary: wallpaperColors[1],
         tertiary: wallpaperColors[2],
       );
     } else {
       _themeService.updateThemeFromColors(
-        loggedUser: user,
-        useWallpaperAsThemeColor: false,
+        loggedUser: null,
+        useWallpaperAsThemeColor: null,
         primary: user.settings.themeColor,
       );
     }
