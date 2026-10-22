@@ -68,7 +68,11 @@ class _UnyoDropdownState extends State<UnyoDropdown> {
               ),
             ),
             trailingIcon:
-                widget.selectedValue == null || widget.selectedValue!.isEmpty || searchController.text.isEmpty
+                widget.reactOnCancel != true ||
+                        widget.onPressed == null ||
+                        widget.selectedValue == null ||
+                        widget.selectedValue!.isEmpty ||
+                        searchController.text.isEmpty
                     ? Icon(Icons.arrow_drop_down, color: ColorScheme.of(context).tertiary.withValues(alpha: 0.7))
                     : GestureDetector(
                       onTap: () {
