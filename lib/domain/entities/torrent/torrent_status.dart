@@ -46,7 +46,7 @@ abstract class TorrentStatus {
 abstract class TorrentStatusModel with _$TorrentStatusModel implements TorrentStatus {
   const factory TorrentStatusModel({
     required String hash,
-    required String name,
+    @Default('') String name,
     required String title,
     required String poster,
     required String category,

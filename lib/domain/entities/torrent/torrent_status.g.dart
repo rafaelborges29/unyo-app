@@ -9,7 +9,7 @@ part of 'torrent_status.dart';
 _TorrentStatusModel _$TorrentStatusModelFromJson(Map<String, dynamic> json) =>
     _TorrentStatusModel(
       hash: json['hash'] as String,
-      name: json['name'] as String,
+      name: json['name'] as String? ?? '',
       title: json['title'] as String,
       poster: json['poster'] as String,
       category: json['category'] as String,
