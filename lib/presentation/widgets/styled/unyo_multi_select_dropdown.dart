@@ -50,7 +50,10 @@ class _UnyoMultiSelectDropdownState extends State<UnyoMultiSelectDropdown> {
 
   @override
   void dispose() {
-    // _closeDropdown();
+    debounceTimer.cancel();
+    _overlayEntry?.remove();
+    _overlayEntry?.dispose();
+    _overlayEntry = null;
     super.dispose();
   }
 
@@ -76,8 +79,11 @@ class _UnyoMultiSelectDropdownState extends State<UnyoMultiSelectDropdown> {
 
   void _closeDropdown() {
     _overlayEntry?.remove();
+    _overlayEntry?.dispose();
     _overlayEntry = null;
-    setState(() => _isOpen = false);
+    if (mounted) {
+      setState(() => _isOpen = false);
+    }
   }
 
   OverlayEntry _createOverlayEntry() {
@@ -111,6 +117,7 @@ class _UnyoMultiSelectDropdownState extends State<UnyoMultiSelectDropdown> {
                                 final isSelected = _selectedItems.contains(item);
                                 return UnyoInkWell(
                                   onTap: () {
+                                    if (!mounted) return;
                                     // manage internal state here (not relying on external controller)
                                     if (isSelected) {
                                       _selectedItems.remove(item);
@@ -121,7 +128,10 @@ class _UnyoMultiSelectDropdownState extends State<UnyoMultiSelectDropdown> {
                                     debounceTimer.cancel();
                                     debounceTimer = Timer(
                                       Duration(milliseconds: widget.debounceMilliseconds),
-                                      () => widget.onChanged?.call(List.from(_selectedItems)),
+                                      () {
+                                        if (!mounted) return;
+                                        widget.onChanged?.call(List.from(_selectedItems));
+                                      },
                                     );
                                     // update the main widget (label, border) and refresh overlay UI
                                     setState(() {});

@@ -50,8 +50,11 @@ class _UnyoSortWidgetState extends State<UnyoSortWidget> {
 
   void _closeDropdown() {
     _overlayEntry?.remove();
+    _overlayEntry?.dispose();
     _overlayEntry = null;
-    setState(() => _isOpen = false);
+    if (mounted) {
+      setState(() => _isOpen = false);
+    }
   }
 
   OverlayEntry _createOverlayEntry() {
@@ -83,6 +86,7 @@ class _UnyoSortWidgetState extends State<UnyoSortWidget> {
                                 final isSelected = option == _selectedOption;
                                 return UnyoInkWell(
                                   onTap: () {
+                                    if (!mounted) return;
                                     setState(() => _selectedOption = option);
                                     widget.onSortChanged?.call(option);
                                     _overlayEntry?.markNeedsBuild();
@@ -124,7 +128,9 @@ class _UnyoSortWidgetState extends State<UnyoSortWidget> {
 
   @override
   void dispose() {
-    // _closeDropdown();
+    _overlayEntry?.remove();
+    _overlayEntry?.dispose();
+    _overlayEntry = null;
     super.dispose();
   }
 
