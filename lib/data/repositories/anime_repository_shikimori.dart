@@ -14,6 +14,7 @@ import 'package:unyo/core/services/api/dto/shikimori/anime_trending_query_entity
 import 'package:unyo/core/services/api/graphql/graphql_response.dart';
 import 'package:unyo/core/services/api/graphql/graphql_service.dart';
 import 'package:unyo/core/services/api/graphql/queries/shikimori_queries.dart' as shikimori_queries;
+import 'package:unyo/data/models/anilist/media/anilist_anime_model.dart';
 import 'package:unyo/data/models/shikimori/media/shikimori_anime_details.dart';
 import 'package:unyo/data/models/shikimori/media/shikimori_anime_model.dart';
 import 'package:unyo/data/repositories/repository_mixin.dart';
@@ -31,6 +32,11 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
 
   @override
   Future<(bool, AnimeDetails)> getAnimeDetails(Anime selectedAnime, User loggedUser) async {
+    // AniList cards retain their AniList ID; Shikimori uses the MAL ID.
+    final animeId = selectedAnime is AnilistAnimeModel ? selectedAnime.idMal : selectedAnime.id;
+    if (animeId <= 0) {
+      return (false, AnimeDetailsModel.empty());
+    }
     // TODO uncomment when ShikimoriUserModel exists
     // Map<String, String>? graphQlHeaders = loggedUser is ShikimoriUserModel
     //     ? {"Authorization": "Bearer ${(loggedUser).accessToken}"}
@@ -39,7 +45,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
         .query<AnimeDetailsQueryEntity>(
           query: shikimori_queries.shikimoriAnimeDetailsQuery,
           fromJson: AnimeDetailsQueryEntity.fromJson,
-          variables: {"ids": selectedAnime.id.toString(), "page": 1, "limit": 20},
+          variables: {"ids": animeId.toString(), "page": 1, "limit": 20},
           // headers: graphQlHeaders,
         );
     throwIfGraphQlError(animeDetailsQueryResponse);
