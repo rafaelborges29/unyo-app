@@ -10,6 +10,8 @@ import 'package:unyo/core/di/locator.dart';
 import 'package:unyo/core/notification/anime_notifier.dart';
 import 'package:unyo/core/notification/manga_notifier.dart';
 import 'package:unyo/core/notification/media_list_notifier.dart';
+import 'package:unyo/core/notification/reload/reload_notifier.dart';
+import 'package:unyo/core/notification/reload/reload_type.dart';
 import 'package:unyo/core/notification/user_notifier.dart';
 import 'package:unyo/data/models/anilist/user/anilist_user_model.dart';
 import 'package:unyo/data/models/local/user/local_user_model.dart';
@@ -27,10 +29,18 @@ class MediaListCubit extends Cubit<MediaListState>
   final AnimeNotifier _selectedAnimeNotifier;
   final MangaNotifier _selectedMangaNotifier;
   final MediaListNotifier _selectedMediaListNotifier;
+  final ReloadNotifier _reloadNotifier;
   late StreamSubscription<User> _loggedUserSubscription;
+  late StreamSubscription<ReloadType> _reloadSubscription;
 
-  MediaListCubit(this._loggedUserNotifier, this._userRepositoryAnilist, this._selectedAnimeNotifier, this._selectedMangaNotifier, this._selectedMediaListNotifier)
-    : super(
+  MediaListCubit(
+    this._loggedUserNotifier,
+    this._userRepositoryAnilist,
+    this._selectedAnimeNotifier,
+    this._selectedMangaNotifier,
+    this._selectedMediaListNotifier,
+    this._reloadNotifier,
+  ) : super(
         MediaListState(
           userAnimeLists: {},
           userMangaLists: {},
@@ -54,6 +64,7 @@ class MediaListCubit extends Cubit<MediaListState>
   @override
   Future<void> close() {
     _loggedUserSubscription.cancel();
+    _reloadSubscription.cancel();
     return super.close();
   }
 
@@ -63,6 +74,13 @@ class MediaListCubit extends Cubit<MediaListState>
     ) {
       emit(state.copyWith(loggedUser: loggedUser));
       _getUserLists(loggedUser);
+    });
+    _reloadSubscription = _reloadNotifier.reloadStream.listen((reloadType) async {
+      if (reloadType == ReloadType.homeMediaListEntryUpdated ||
+          reloadType == ReloadType.videoMediaListEntryUpdated) {
+        _logger.i("Reloading User Lists due to media list entry update");
+        await _getUserLists(state.loggedUser, ignoreCache: true);
+      }
     });
   }
 
@@ -86,15 +104,15 @@ class MediaListCubit extends Cubit<MediaListState>
     // close();
   }
 
-  Future<void> _getUserLists(User user) async {
+  Future<void> _getUserLists(User user, {bool ignoreCache = false}) async {
     try {
       switch (user) {
         case AnilistUserModel anilistUserModel:
           _logger.i("Fetching Anilist User lists");
           Map<String, List<Anime>> userAnimeLists = await _userRepositoryAnilist
-              .getUserAnimeLists(user);
+              .getUserAnimeLists(user, ignoreCache: ignoreCache);
           Map<String, List<Manga>> userMangaLists = await _userRepositoryAnilist
-              .getUserMangaLists(user);
+              .getUserMangaLists(user, ignoreCache: ignoreCache);
           emit(
             state.copyWith(
               userAnimeLists: userAnimeLists,

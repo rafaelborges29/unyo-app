@@ -135,7 +135,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   }
 
   @override
-  Future<Map<String, List<Anime>>> getUserAnimeLists(User user) async {
+  Future<Map<String, List<Anime>>> getUserAnimeLists(User user, {bool ignoreCache = false}) async {
     Map<String, String> graphQlHeaders = {
       "Authorization": "Bearer ${(user as AnilistUserModel).accessToken}",
     };
@@ -145,6 +145,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
           fromJson: MediaCollectionGraphqlDtoData.fromJson,
           variables: {"userName": user.name, "userId": user.id, "type": "ANIME"},
           headers: graphQlHeaders,
+          ignoreCache: ignoreCache,
         );
     throwIfGraphQlError(mediaCollection);
     Map<String, List<Anime>> userAnimeLists = Map.fromEntries(
@@ -160,7 +161,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   }
 
   @override
-  Future<Map<String, List<Manga>>> getUserMangaLists(User user) async {
+  Future<Map<String, List<Manga>>> getUserMangaLists(User user, {bool ignoreCache = false}) async {
     Map<String, String> graphQlHeaders = {
       "Authorization": "Bearer ${(user as AnilistUserModel).accessToken}",
     };
@@ -170,6 +171,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
           fromJson: MediaCollectionGraphqlDtoData.fromJson,
           variables: {"userName": user.name, "userId": user.id, "type": "MANGA"},
           headers: graphQlHeaders,
+          ignoreCache: ignoreCache,
         );
     throwIfGraphQlError(mediaCollection);
     Map<String, List<Manga>> userMangaLists = Map.fromEntries(
