@@ -246,6 +246,7 @@ class VideoService {
     }
     _currentSubtitleTrack = subtitleTracks[subtitleIndex];
     if (_currentSubtitleTrack != null && _currentSubtitleTrack!.embedded) {
+      _player.setMedia("", mdk.MediaType.subtitle);
       _player.activeSubtitleTracks = [_currentSubtitleTrack!.embeddedIndex];
     } else {
       _player.setMedia(_currentSubtitleTrack!.url, mdk.MediaType.subtitle);
@@ -260,6 +261,7 @@ class VideoService {
     }
     _currentAudioTrack = audioTracks[audioTrackIndex];
     if (_currentAudioTrack != null && _currentAudioTrack!.embedded) {
+      _player.setMedia("", mdk.MediaType.audio);
       _player.activeAudioTracks = [_currentAudioTrack!.embeddedIndex];
     } else {
       _player.setMedia(_currentAudioTrack!.url, mdk.MediaType.audio);
