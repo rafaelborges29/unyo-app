@@ -21,7 +21,7 @@ Logger getLogger() {
   }
   return Logger(
     printer: PrettyPrinter(methodCount: 15),
-    level: Level.debug,
+    level: kDebugMode ? Level.debug : Level.info,
     output: kDebugMode
         ? ConsoleOutput()
         : FileOutput(file: newLogFile, overrideExisting: true),
