@@ -43,7 +43,8 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   @override
   Future<List<User>> fetchAllLoggedInUsers() async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    // Surface damaged records instead of letting Hive truncate the user's store.
+    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers", crashRecovery: false);
     return [..._anilistUsersBox.values];
   }
 
@@ -73,7 +74,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
 
   @override
   Future<void> updateUserInfo(User user) async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers", crashRecovery: false);
     if (_anilistUsersBox.containsKey(user.name)) {
       _logger.w("User ${user.name} already exists in the registered anilist users, updating info");
       await _anilistUsersBox.put(user.name, user as AnilistUserModel);
@@ -217,7 +218,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
   }
 
   Future<void> _createUser(String accessCode) async {
-    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers");
+    _anilistUsersBox = await Hive.openBox<AnilistUserModel>("anilistUsers", crashRecovery: false);
     ApiResponse<AuthTokenEntity> authToken = await getAuthToken(accessCode);
     Map<String, String> graphQlHeaders = {"Authorization": "Bearer ${authToken.data.accessToken}"};
     ApiGraphQLResponse<ViewerGraphqlEntity> viewerDto = await _anilistGraphQLService

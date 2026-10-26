@@ -9,6 +9,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:unyo/application/cubits/login_cubit.dart';
 import 'package:unyo/application/states/login_state.dart';
 import 'package:unyo/core/services/effects/app_effect_handler.dart';
+import 'package:unyo/presentation/views/loading_view.dart';
 import 'package:unyo/presentation/widgets/styled/styled.dart';
 import 'package:unyo/presentation/widgets/text/texts.dart';
 import 'package:unyo/core/di/locator.dart';
@@ -55,12 +56,13 @@ class _LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<_LoginView> {
   late final TextEditingController loginTextFieldController;
+  late Future<bool> _usersLoaded;
 
   @override
   void initState() {
     super.initState();
     loginTextFieldController = TextEditingController();
-    context.read<LoginCubit>().fetchAllUsers();
+    _usersLoaded = context.read<LoginCubit>().fetchAllUsers();
   }
 
   @override
@@ -83,19 +85,62 @@ class _LoginViewState extends State<_LoginView> {
             SizedBox(height: 40.h),
             SizedBox(
               height: 250.h,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    ...state.availableUsers.map(
-                          (user) => UserAvatar(user: user, onPressed: () => context.read<LoginCubit>().loginUser(user, context)),
+              child: FutureBuilder<bool>(
+                future: _usersLoaded,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const LoadingView(
+                      description: "Loading saved users...",
+                    );
+                  }
+                  if (snapshot.data != true) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const TextBodyMedium(
+                          text:
+                              "Unable to read saved users. Your store has not been reset.\n"
+                              "Check storage permissions or restore a backup, then retry.",
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 15.h),
+                        DarkUnyoButton(
+                          text: "Retry",
+                          onPressed: () {
+                            setState(() {
+                              _usersLoaded = context
+                                  .read<LoginCubit>()
+                                  .fetchAllUsers();
+                            });
+                          },
+                        ),
+                      ],
+                    );
+                  }
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        ...state.availableUsers.map(
+                          (user) => UserAvatar(
+                            user: user,
+                            onPressed: () => context
+                                .read<LoginCubit>()
+                                .loginUser(user, context),
+                          ),
+                        ),
+                        AddUserAvatar(
+                          onPressed: () => context
+                              .read<LoginCubit>()
+                              .initiateAccountCreation(context),
+                        ),
+                        // Display existing users
+                      ],
                     ),
-                    AddUserAvatar(onPressed: () => context.read<LoginCubit>().initiateAccountCreation(context)),
-                    // Display existing users
-                  ],
-                ),
+                  );
+                },
               ),
             ),
             const Spacer(flex: 10),
