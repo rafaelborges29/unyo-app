@@ -204,6 +204,15 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
         );
   }
 
+  Future<void> refreshRepositories() async {
+    await Future.wait([
+      _fetchAvailableAnimeExtensions(state.loggedUser),
+      _fetchAvailableMangaExtensions(state.loggedUser),
+      _fetchAnimeExtensionUpdates(state.loggedUser),
+      _fetchMangaExtensionUpdates(state.loggedUser),
+    ]);
+  }
+
   Future<void> _fetchAvailableAnimeExtensions(User loggedUser) async {
     try {
       _logger.i("Fetching available anime extensions for Aniyomi");
