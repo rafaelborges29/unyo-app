@@ -30,7 +30,10 @@ class SaveMediaListEntrySaveMediaListEntry {
 	late SaveMediaListEntrySaveMediaListEntryStartedAt startedAt = SaveMediaListEntrySaveMediaListEntryStartedAt();
 	late SaveMediaListEntrySaveMediaListEntryCompletedAt completedAt = SaveMediaListEntrySaveMediaListEntryCompletedAt();
 
-	SaveMediaListEntrySaveMediaListEntry();
+	SaveMediaListEntrySaveMediaListEntry() {
+		startedAt = SaveMediaListEntrySaveMediaListEntryStartedAt();
+		completedAt = SaveMediaListEntrySaveMediaListEntryCompletedAt();
+	}
 
 	factory SaveMediaListEntrySaveMediaListEntry.fromJson(Map<String, dynamic> json) => $SaveMediaListEntrySaveMediaListEntryFromJson(json);
 

@@ -113,7 +113,10 @@ class MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMedia {
 	dynamic nextAiringEpisode;
 
 
-	MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMedia();
+	MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMedia() {
+		endDate = MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMediaEndDate();
+		startDate = MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMediaStartDate();
+	}
 
 	factory MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMedia.fromJson(Map<String, dynamic> json) => $MediaCollectionGraphqlDtoDataMediaListCollectionListsEntriesMediaFromJson(json);
 
