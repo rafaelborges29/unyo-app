@@ -238,8 +238,33 @@ class AnimeDetailsCubit extends Cubit<AnimeDetailsState> with EffectMixin<AnimeD
     }
   }
 
-  void openAnimeDetailsMediaEntryDialog(BuildContext context) {
-    showWidgetDialogEffect(dialog: AnimeDetailsMediaEntryDialog(cubit: this));
+  Future<void> openAnimeDetailsMediaEntryDialog(BuildContext context) async {
+    final user = state.loggedUser;
+    final anime = state.selectedAnime;
+    try {
+      final scoreFormat = user is AnilistUserModel
+          ? await _userRepositoryAnilist.getUserScoreFormat(user)
+          : 'POINT_10';
+      if (isClosed || !context.mounted || state.loggedUser != user || state.selectedAnime != anime) return;
+      final (maxScore, scoreDivisions) = switch (scoreFormat) {
+        'POINT_100' => (100, 100),
+        'POINT_10_DECIMAL' => (10, 100),
+        'POINT_10' => (10, 10),
+        'POINT_5' => (5, 5),
+        'POINT_3' => (3, 3),
+        _ => throw FormatException('Unsupported AniList score format: $scoreFormat'),
+      };
+      showWidgetDialogEffect(
+        dialog: AnimeDetailsMediaEntryDialog(
+          cubit: this,
+          maxScore: maxScore,
+          scoreDivisions: scoreDivisions,
+        ),
+      );
+    } catch (e, stackTrace) {
+      if (isClosed) return;
+      handleError("Error loading score format: $e", stackTrace: stackTrace);
+    }
   }
 
   Future<void> openAnimeServerSelectionDrawer(BuildContext context, int episodeIndex) async {
