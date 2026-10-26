@@ -33,6 +33,7 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
   late StreamSubscription<User> _loggedUserSubscription;
   late StreamSubscription<ReloadType> _reloadSubscription;
   final Logger _logger = sl<Logger>();
+  int _loadId = 0;
 
   AnimeCubit(
     this._animeRepository,
@@ -74,34 +75,55 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
     return super.close();
   }
 
-  // TODO develop some loading states for the widgets and remove the awaits to make the load look faster
-  void _init() async {
+  void _init() {
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((
       loggedUser,
-    ) async {
-      emit(state.copyWith(loggedUser: loggedUser));
-      if (!state.userLoaded) {
-        await _fetchRecentlyReleased(1, loggedUser);
-        await _fetchTrending(1, loggedUser);
-        await _fetchRecentlyCompleted(1, loggedUser);
-        await _fetchPopular(1, loggedUser);
-        await _fetchUpcoming(1, loggedUser);
-        emit(state.copyWith(userLoaded: true, isLoading: false));
+    ) {
+      final serviceChanged =
+          state.loggedUser.settings.service != loggedUser.settings.service;
+      if (!state.userLoaded || serviceChanged) {
+        _loadAnime(loggedUser, ignoreCache: serviceChanged);
+      } else {
+        emit(state.copyWith(loggedUser: loggedUser));
       }
     });
-    _reloadSubscription = _reloadNotifier.reloadStream.listen((reloadType) async {
-      if (reloadType == ReloadType.newMetadataService) {
+    _reloadSubscription = _reloadNotifier.reloadStream.listen((reloadType) {
+      // A service change on the user stream already starts a fresh load.
+      if (reloadType == ReloadType.newMetadataService && !state.isLoading) {
         _logger.i("Reloading Anime Screen due to new metadata service");
-        if (!state.userLoaded) {
-          _fetchRecentlyReleased(1, state.loggedUser, ignoreCache: true);
-          _fetchTrending(1, state.loggedUser, ignoreCache: true);
-          _fetchRecentlyCompleted(1, state.loggedUser, ignoreCache: true);
-          _fetchPopular(1, state.loggedUser, ignoreCache: true);
-          _fetchUpcoming(1, state.loggedUser, ignoreCache: true);
-        }
+        _loadAnime(_loggedUserNotifier.currentUser, ignoreCache: true);
       }
     });
   }
+
+  Future<void> _loadAnime(User loggedUser, {bool ignoreCache = false}) async {
+    final loadId = ++_loadId;
+    emit(
+      state.copyWith(
+        loggedUser: loggedUser,
+        recentlyReleased: (false, []),
+        trending: (false, []),
+        recentlyCompleted: (false, []),
+        popular: (false, []),
+        upcoming: (false, []),
+        banners: [],
+        isLoading: true,
+        userLoaded: true,
+      ),
+    );
+    await Future.wait([
+      _fetchRecentlyReleased(1, loggedUser, ignoreCache: ignoreCache),
+      _fetchTrending(1, loggedUser, ignoreCache: ignoreCache),
+      _fetchRecentlyCompleted(1, loggedUser, ignoreCache: ignoreCache),
+      _fetchPopular(1, loggedUser, ignoreCache: ignoreCache),
+      _fetchUpcoming(1, loggedUser, ignoreCache: ignoreCache),
+    ]);
+    if (_isCurrentLoad(loadId)) {
+      emit(state.copyWith(isLoading: false));
+    }
+  }
+
+  bool _isCurrentLoad(int loadId) => !isClosed && loadId == _loadId;
 
   void navigateToCalendar(BuildContext context) {
     _logger.i("Navigating to Anime Calendar");
@@ -115,6 +137,18 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
   }
 
   void navigateToAnimeDetails(Anime anime, MediaList mediaList) {
+    if (state.isLoading ||
+        state.loggedUser.settings.service !=
+            _loggedUserNotifier.currentUser.settings.service ||
+        ![
+          ...state.recentlyReleased.$2,
+          ...state.trending.$2,
+          ...state.recentlyCompleted.$2,
+          ...state.popular.$2,
+          ...state.upcoming.$2,
+        ].any((currentAnime) => identical(currentAnime, anime))) {
+      return;
+    }
     _logger.i("Navigating to Anime Details of ${anime.title.userPreferred}");
     _selectedAnimeNotifier.updateSelectedAnime(anime);
     _selectedMediaListNotifier.updateSelectedMediaList(mediaList);
@@ -122,18 +156,22 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
   }
 
   Future<void> _fetchRecentlyReleased(int page, User loggedUser, {bool ignoreCache = false}) async {
+    final loadId = _loadId;
     try {
       _logger.i("Fetching recently released anime");
       (bool, List<Anime>) recentlyReleased = await _animeRepository
           .getRecentlyReleasedAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (!_isCurrentLoad(loadId)) return;
       emit(state.copyWith(recentlyReleased: recentlyReleased));
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch recently released anime:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch recently released anime $e",
         stackTrace: stackTrace,
@@ -142,10 +180,12 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
   }
 
   Future<void> _fetchTrending(int page, User loggedUser, {bool ignoreCache = false}) async {
+    final loadId = _loadId;
     try {
       _logger.i("Fetching trending anime");
       (bool, List<Anime>) trending = await _animeRepository
           .getTrendingAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (!_isCurrentLoad(loadId)) return;
       emit(state.copyWith(trending: trending));
       if (page == 1) {
         List<Anime> banners = trending.$2.where((anime) => anime.bannerImage != "").toList();
@@ -159,46 +199,56 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
         );
       }
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch trending anime:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError("Failed to fetch trending anime $e", stackTrace: stackTrace);
     }
   }
 
   Future<void> _fetchPopular(int page, User loggedUser, {bool ignoreCache = false}) async {
+    final loadId = _loadId;
     try {
       _logger.i("Fetching popular anime");
       (bool, List<Anime>) popular = await _animeRepository
           .getPopularAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (!_isCurrentLoad(loadId)) return;
       emit(state.copyWith(popular: popular));
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch popular anime:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError("Failed to fetch popular anime $e", stackTrace: stackTrace);
     }
   }
 
   Future<void> _fetchRecentlyCompleted(int page, User loggedUser, {bool ignoreCache = false}) async {
+    final loadId = _loadId;
     try {
       _logger.i("Fetching recently completed anime");
       (bool, List<Anime>) recentlyCompleted = await _animeRepository
           .getRecentlyCompletedAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (!_isCurrentLoad(loadId)) return;
       emit(state.copyWith(recentlyCompleted: recentlyCompleted));
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch recently completed anime:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch recently completed anime $e",
         stackTrace: stackTrace,
@@ -207,18 +257,22 @@ class AnimeCubit extends Cubit<AnimeState> with EffectMixin<AnimeState> {
   }
 
   Future<void> _fetchUpcoming(int page, User loggedUser, {bool ignoreCache = false}) async {
+    final loadId = _loadId;
     try {
       _logger.i("Fetching upcoming anime");
       (bool, List<Anime>) upcoming = await _animeRepository
           .getUpcomingAnimes(page, loggedUser, ignoreCache: ignoreCache);
+      if (!_isCurrentLoad(loadId)) return;
       emit(state.copyWith(upcoming: upcoming));
     } on HttpServerException catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError(
         "Failed to fetch upcoming anime:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (!_isCurrentLoad(loadId)) return;
       handleError("Failed to fetch upcoming anime $e", stackTrace: stackTrace);
     }
   }
