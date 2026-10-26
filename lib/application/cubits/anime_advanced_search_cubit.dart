@@ -32,6 +32,7 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
 
   // Repositories
   final AnimeRepository _animeRepository;
+  int _searchRequestId = 0;
 
   AnimeAdvancedSearchCubit(
     this._loggedUserNotifier,
@@ -195,6 +196,7 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
   }
 
   Future<void> _performAnimeAdvancedSearch() async {
+    final requestId = ++_searchRequestId;
     List<Anime> searchResults = await _animeRepository.performAnimeAdvancedSearch(
       state.searchQuery,
       state.selectedGenres,
@@ -206,6 +208,7 @@ class AnimeAdvancedSearchCubit extends Cubit<AnimeAdvancedSearchState>
       1,
       state.loggedUser
     );
+    if (requestId != _searchRequestId) return;
     emit(state.copyWith(searchResults: searchResults));
   }
 }
