@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:unyo/application/cubits/effect_mixin.dart';
 import 'package:unyo/application/effects/app_effects.dart';
@@ -25,6 +26,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
   // Notifiers
   final UserNotifier _loggedUserNotifier;
   late StreamSubscription<User> _loggedUserSubscription;
+  int _repositoryRevision = 0;
 
   ExtensionsCubit(this._extensionRepositoryAniyomi, this._loggedUserNotifier)
     : super(
@@ -56,15 +58,38 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
 
   void _init() {
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) {
+      final previousUser = state.loggedUser;
+      final shouldRefresh =
+          !state.userLoaded ||
+          previousUser.id != loggedUser.id ||
+          previousUser.runtimeType != loggedUser.runtimeType ||
+          !listEquals(
+            previousUser.settings.aniyomiExtensionsRepositories,
+            loggedUser.settings.aniyomiExtensionsRepositories,
+          ) ||
+          !listEquals(
+            previousUser.settings.tachiyomiExtensionsRepositories,
+            loggedUser.settings.tachiyomiExtensionsRepositories,
+          );
       emit(state.copyWith(loggedUser: loggedUser));
-      if (!state.userLoaded) {
+      if (shouldRefresh) {
+        // Discard responses started before the repositories or profile changed.
+        _repositoryRevision++;
+        emit(
+          state.copyWith(
+            availableAnimeExtensions: [],
+            availableMangaExtensions: [],
+            animeExtensionUpdates: {},
+            mangaExtensionUpdates: {},
+            userLoaded: true,
+          ),
+        );
         _fetchAvailableAnimeExtensions(loggedUser);
         _fetchAvailableMangaExtensions(loggedUser);
         _fetchInstaledAnimeExtensions(loggedUser);
         _fetchInstaledMangaExtensions(loggedUser);
         _fetchAnimeExtensionUpdates(loggedUser);
         _fetchMangaExtensionUpdates(loggedUser);
-        emit(state.copyWith(userLoaded: true));
       }
     });
   }
@@ -205,65 +230,81 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
   }
 
   Future<void> _fetchAvailableAnimeExtensions(User loggedUser) async {
+    final revision = _repositoryRevision;
     try {
       _logger.i("Fetching available anime extensions for Aniyomi");
       Set<Extension> availableAniyomiExtensions = await _extensionRepositoryAniyomi
           .getAvailableAnimeExtensions(loggedUser);
+      if (isClosed || revision != _repositoryRevision) return;
       emit(state.copyWith(availableAnimeExtensions: availableAniyomiExtensions.toList()));
     } on HttpServerException catch (e, stackTrace) {
+      if (isClosed || revision != _repositoryRevision) return;
       handleError(
         "Failed to fetch available anime extensions:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (isClosed || revision != _repositoryRevision) return;
       handleError("Failed to fetch available anime extensions $e", stackTrace: stackTrace);
     }
   }
 
   Future<void> _fetchAvailableMangaExtensions(User loggedUser) async {
+    final revision = _repositoryRevision;
     try {
       _logger.i("Fetching available manga extensions for Aniyomi");
       Set<Extension> availableTachiyomiExtensions = await _extensionRepositoryAniyomi
           .getAvailableMangaExtensions(loggedUser);
+      if (isClosed || revision != _repositoryRevision) return;
       emit(state.copyWith(availableMangaExtensions: availableTachiyomiExtensions.toList()));
     } on HttpServerException catch (e, stackTrace) {
+      if (isClosed || revision != _repositoryRevision) return;
       handleError(
         "Failed to fetch available manga extensions:",
         responseBody: e.message,
         stackTrace: stackTrace,
       );
     } catch (e, stackTrace) {
+      if (isClosed || revision != _repositoryRevision) return;
       handleError("Failed to fetch available manga extensions $e", stackTrace: stackTrace);
     }
   }
 
   Future<void> _fetchInstaledAnimeExtensions(User loggedUser) async {
+    final revision = _repositoryRevision;
     try {
       _logger.i("Fetching installed anime extensions for Aniyomi");
       Set<Extension> installedAniyomiExtensions = await _extensionRepositoryAniyomi
           .getInstalledAnimeExtensions(loggedUser);
+      if (isClosed || revision != _repositoryRevision) return;
       emit(state.copyWith(installedAnimeExtensions: installedAniyomiExtensions.toList()));
     } catch (e, stackTrace) {
+      if (isClosed || revision != _repositoryRevision) return;
       handleError("Failed to fetch installed anime extensions $e", stackTrace: stackTrace);
     }
   }
 
   Future<void> _fetchInstaledMangaExtensions(User loggedUser) async {
+    final revision = _repositoryRevision;
     try {
       _logger.i("Fetching installed manga extensions for Aniyomi");
       Set<Extension> installedTachiyomiExtensions = await _extensionRepositoryAniyomi
           .getInstalledMangaExtensions(loggedUser);
+      if (isClosed || revision != _repositoryRevision) return;
       emit(state.copyWith(installedMangaExtensions: installedTachiyomiExtensions.toList()));
     } catch (e, stackTrace) {
+      if (isClosed || revision != _repositoryRevision) return;
       handleError("Failed to fetch installed manga extensions $e", stackTrace: stackTrace);
     }
   }
 
   Future<void> _fetchAnimeExtensionUpdates(User loggedUser) async {
+    final revision = _repositoryRevision;
     try {
       _logger.i("Fetching anime extension updates");
       final updates = await _extensionRepositoryAniyomi.getAnimeExtensionUpdates(loggedUser);
+      if (isClosed || revision != _repositoryRevision) return;
       emit(state.copyWith(animeExtensionUpdates: updates));
     } catch (e, stackTrace) {
       _logger.w("Failed to fetch anime extension updates", stackTrace: stackTrace);
@@ -271,9 +312,11 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
   }
 
   Future<void> _fetchMangaExtensionUpdates(User loggedUser) async {
+    final revision = _repositoryRevision;
     try {
       _logger.i("Fetching manga extension updates");
       final updates = await _extensionRepositoryAniyomi.getMangaExtensionUpdates(loggedUser);
+      if (isClosed || revision != _repositoryRevision) return;
       emit(state.copyWith(mangaExtensionUpdates: updates));
     } catch (e, stackTrace) {
       _logger.w("Failed to fetch manga extension updates", stackTrace: stackTrace);
