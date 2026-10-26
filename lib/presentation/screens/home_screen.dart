@@ -130,7 +130,7 @@ class _HomeViewState extends State<_HomeView> {
                                 .read<HomeCubit>()
                                 .navigateToUserMangaList(context),
                         image:
-                            state.mediaCoverImages.isNotEmpty ? state.mediaCoverImages[1] : "",
+                            state.mediaCoverImages.length > 1 ? state.mediaCoverImages[1] : "",
                         text: "Manga List",
                       ),
                     ],

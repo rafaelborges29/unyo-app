@@ -261,7 +261,7 @@ class _AnimeDetailsViewState extends State<_AnimeDetailsView> {
                                                             context,
                                                             genre,
                                                           ),
-                                                  image: state.banners.isNotEmpty ? state.banners[index] : "",
+                                                  image: state.banners.length > index ? state.banners[index] : "",
                                                   text: genre,
                                                 ),
                                               ),

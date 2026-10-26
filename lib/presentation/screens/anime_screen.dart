@@ -103,7 +103,7 @@ class _AnimeViewState extends State<_AnimeView> {
                     MediaButton(
                       onPressed: () => context.read<AnimeCubit>().navigateToAdvancedSearch(context),
                       image:
-                          state.banners.isNotEmpty ? state.banners[1].bannerImage : "",
+                          state.banners.length > 1 ? state.banners[1].bannerImage : "",
                       text: "Advanced Search",
                     ),
                   ],

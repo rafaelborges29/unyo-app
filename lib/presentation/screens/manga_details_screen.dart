@@ -223,7 +223,7 @@ class _MangaDetailsViewState extends State<_MangaDetailsView> {
                                                             context,
                                                             genre
                                                           ),
-                                                  image: state.banners.isNotEmpty ? state.banners[index] : "",
+                                                  image: state.banners.length > index ? state.banners[index] : "",
                                                   text: genre,
                                                 ),
                                               ),
