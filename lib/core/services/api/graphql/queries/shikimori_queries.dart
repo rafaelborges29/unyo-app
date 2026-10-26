@@ -6,8 +6,8 @@
 // }
 const animeUpcomingOrPopularQuery =
 '''
-query Animes(\$page: PositiveInt, \$limit: PositiveInt, \$order: OrderEnum) {
-  animes(page: \$page, limit: \$limit, order: \$order) {
+query Animes(\$page: PositiveInt, \$limit: PositiveInt, \$order: OrderEnum, \$status: AnimeStatusString) {
+  animes(page: \$page, limit: \$limit, order: \$order, status: \$status) {
     malId
     id
     english
