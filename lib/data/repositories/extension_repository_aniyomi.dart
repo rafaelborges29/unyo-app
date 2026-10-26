@@ -64,6 +64,7 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
               icon: "${repoUrl.replaceFirst("index.min.json", "icon/")}${aniyomiRepoJsonEntity.pkg}.png",
               lang: aniyomiRepoJsonEntity.lang,
               version: aniyomiRepoJsonEntity.version,
+              versionCode: _parseVersionCode(aniyomiRepoJsonEntity.code),
               nsfw: aniyomiRepoJsonEntity.nsfw.toInt(),
               type: ExtensionType.ANIYOMI,
               repositoryUrl: repoUrl,
@@ -94,6 +95,7 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
               icon: "${repoUrl.replaceFirst("index.min.json", "icon/")}${tachiyomiRepoJsonEntity.pkg}.png",
               lang: tachiyomiRepoJsonEntity.lang,
               version: tachiyomiRepoJsonEntity.version,
+              versionCode: _parseVersionCode(tachiyomiRepoJsonEntity.code),
               nsfw: tachiyomiRepoJsonEntity.nsfw.toInt(),
               type: ExtensionType.TACHIYOMI,
               repositoryUrl: repoUrl,
@@ -146,12 +148,12 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
       Extension? latest;
       for (final avail in allAvailable) {
         if (avail.pkg == ext.pkg && avail.repositoryUrl == ext.repositoryUrl) {
-          if (latest == null || _compareVersions(avail.version, latest.version) > 0) {
+          if (latest == null || _compareVersions(avail, latest) > 0) {
             latest = avail;
           }
         }
       }
-      if (latest != null && _compareVersions(latest.version, ext.version) > 0) {
+      if (latest != null && _compareVersions(latest, ext) > 0) {
         updates[ext.pkg] = latest;
       }
     }
@@ -308,12 +310,28 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
         .toList();
   }
 
-  int _compareVersions(String a, String b) {
-    final pa = a.split('.').map(int.tryParse).map((v) => v ?? 0).toList();
-    final pb = b.split('.').map(int.tryParse).map((v) => v ?? 0).toList();
+  int? _parseVersionCode(double? code) {
+    if (code == null) return null;
+    if (!code.isFinite || code <= 0 || code.toInt().compareTo(code) != 0) {
+      throw FormatException('Invalid extension version code: $code');
+    }
+    return code.toInt();
+  }
+
+  int _compareVersions(Extension a, Extension b) {
+    final aCode = a.versionCode;
+    final bCode = b.versionCode;
+    if (aCode != null && bCode != null) return aCode.compareTo(bCode);
+
+    // Legacy records have no code. Only dotted numeric display labels can be ordered.
+    final numericVersion = RegExp(r'^[0-9]+(?:\.[0-9]+)*$');
+    if (!numericVersion.hasMatch(a.version) || !numericVersion.hasMatch(b.version)) return 0;
+    final pa = a.version.split('.').map(int.tryParse).toList();
+    final pb = b.version.split('.').map(int.tryParse).toList();
+    if (pa.contains(null) || pb.contains(null)) return 0;
     for (int i = 0; i < max(pa.length, pb.length); i++) {
-      final va = i < pa.length ? pa[i] : 0;
-      final vb = i < pb.length ? pb[i] : 0;
+      final va = i < pa.length ? pa[i]! : 0;
+      final vb = i < pb.length ? pb[i]! : 0;
       if (va != vb) return va.compareTo(vb);
     }
     return 0;

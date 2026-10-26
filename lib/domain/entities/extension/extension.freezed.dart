@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ExtensionModel {
 
-@HiveField(0) String get name;@HiveField(1) String get pkg;@HiveField(2) String get apk;@HiveField(3) String get icon;@HiveField(4) String get lang;@HiveField(5) String get version;@HiveField(6) int get nsfw;@HiveField(7) String get type;@HiveField(8) String get repositoryUrl;
+@HiveField(0) String get name;@HiveField(1) String get pkg;@HiveField(2) String get apk;@HiveField(3) String get icon;@HiveField(4) String get lang;@HiveField(5) String get version;@HiveField(6) int get nsfw;@HiveField(7) String get type;@HiveField(8) String get repositoryUrl;@HiveField(9) int? get versionCode;
 /// Create a copy of ExtensionModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,12 +28,12 @@ $ExtensionModelCopyWith<ExtensionModel> get copyWith => _$ExtensionModelCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExtensionModel&&(identical(other.name, name) || other.name == name)&&(identical(other.pkg, pkg) || other.pkg == pkg)&&(identical(other.apk, apk) || other.apk == apk)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.lang, lang) || other.lang == lang)&&(identical(other.version, version) || other.version == version)&&(identical(other.nsfw, nsfw) || other.nsfw == nsfw)&&(identical(other.type, type) || other.type == type)&&(identical(other.repositoryUrl, repositoryUrl) || other.repositoryUrl == repositoryUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExtensionModel&&(identical(other.name, name) || other.name == name)&&(identical(other.pkg, pkg) || other.pkg == pkg)&&(identical(other.apk, apk) || other.apk == apk)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.lang, lang) || other.lang == lang)&&(identical(other.version, version) || other.version == version)&&(identical(other.nsfw, nsfw) || other.nsfw == nsfw)&&(identical(other.type, type) || other.type == type)&&(identical(other.repositoryUrl, repositoryUrl) || other.repositoryUrl == repositoryUrl)&&(identical(other.versionCode, versionCode) || other.versionCode == versionCode));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,pkg,apk,icon,lang,version,nsfw,type,repositoryUrl);
+int get hashCode => Object.hash(runtimeType,name,pkg,apk,icon,lang,version,nsfw,type,repositoryUrl,versionCode);
 
 
 
@@ -44,7 +44,7 @@ abstract mixin class $ExtensionModelCopyWith<$Res>  {
   factory $ExtensionModelCopyWith(ExtensionModel value, $Res Function(ExtensionModel) _then) = _$ExtensionModelCopyWithImpl;
 @useResult
 $Res call({
-@HiveField(0) String name,@HiveField(1) String pkg,@HiveField(2) String apk,@HiveField(3) String icon,@HiveField(4) String lang,@HiveField(5) String version,@HiveField(6) int nsfw,@HiveField(7) String type,@HiveField(8) String repositoryUrl
+@HiveField(0) String name,@HiveField(1) String pkg,@HiveField(2) String apk,@HiveField(3) String icon,@HiveField(4) String lang,@HiveField(5) String version,@HiveField(6) int nsfw,@HiveField(7) String type,@HiveField(8) String repositoryUrl,@HiveField(9) int? versionCode
 });
 
 
@@ -61,7 +61,7 @@ class _$ExtensionModelCopyWithImpl<$Res>
 
 /// Create a copy of ExtensionModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? pkg = null,Object? apk = null,Object? icon = null,Object? lang = null,Object? version = null,Object? nsfw = null,Object? type = null,Object? repositoryUrl = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? pkg = null,Object? apk = null,Object? icon = null,Object? lang = null,Object? version = null,Object? nsfw = null,Object? type = null,Object? repositoryUrl = null,Object? versionCode = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,pkg: null == pkg ? _self.pkg : pkg // ignore: cast_nullable_to_non_nullable
@@ -72,7 +72,8 @@ as String,version: null == version ? _self.version : version // ignore: cast_nul
 as String,nsfw: null == nsfw ? _self.nsfw : nsfw // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,repositoryUrl: null == repositoryUrl ? _self.repositoryUrl : repositoryUrl // ignore: cast_nullable_to_non_nullable
-as String,
+as String,versionCode: freezed == versionCode ? _self.versionCode : versionCode // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  String pkg, @HiveField(2)  String apk, @HiveField(3)  String icon, @HiveField(4)  String lang, @HiveField(5)  String version, @HiveField(6)  int nsfw, @HiveField(7)  String type, @HiveField(8)  String repositoryUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  String pkg, @HiveField(2)  String apk, @HiveField(3)  String icon, @HiveField(4)  String lang, @HiveField(5)  String version, @HiveField(6)  int nsfw, @HiveField(7)  String type, @HiveField(8)  String repositoryUrl, @HiveField(9)  int? versionCode)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExtensionModel() when $default != null:
-return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.version,_that.nsfw,_that.type,_that.repositoryUrl);case _:
+return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.version,_that.nsfw,_that.type,_that.repositoryUrl,_that.versionCode);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.versi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  String pkg, @HiveField(2)  String apk, @HiveField(3)  String icon, @HiveField(4)  String lang, @HiveField(5)  String version, @HiveField(6)  int nsfw, @HiveField(7)  String type, @HiveField(8)  String repositoryUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@HiveField(0)  String name, @HiveField(1)  String pkg, @HiveField(2)  String apk, @HiveField(3)  String icon, @HiveField(4)  String lang, @HiveField(5)  String version, @HiveField(6)  int nsfw, @HiveField(7)  String type, @HiveField(8)  String repositoryUrl, @HiveField(9)  int? versionCode)  $default,) {final _that = this;
 switch (_that) {
 case _ExtensionModel():
-return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.version,_that.nsfw,_that.type,_that.repositoryUrl);case _:
+return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.version,_that.nsfw,_that.type,_that.repositoryUrl,_that.versionCode);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.versi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String name, @HiveField(1)  String pkg, @HiveField(2)  String apk, @HiveField(3)  String icon, @HiveField(4)  String lang, @HiveField(5)  String version, @HiveField(6)  int nsfw, @HiveField(7)  String type, @HiveField(8)  String repositoryUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@HiveField(0)  String name, @HiveField(1)  String pkg, @HiveField(2)  String apk, @HiveField(3)  String icon, @HiveField(4)  String lang, @HiveField(5)  String version, @HiveField(6)  int nsfw, @HiveField(7)  String type, @HiveField(8)  String repositoryUrl, @HiveField(9)  int? versionCode)?  $default,) {final _that = this;
 switch (_that) {
 case _ExtensionModel() when $default != null:
-return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.version,_that.nsfw,_that.type,_that.repositoryUrl);case _:
+return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.version,_that.nsfw,_that.type,_that.repositoryUrl,_that.versionCode);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.name,_that.pkg,_that.apk,_that.icon,_that.lang,_that.versi
 @JsonSerializable()
 
 class _ExtensionModel implements ExtensionModel {
-  const _ExtensionModel({@HiveField(0) required this.name, @HiveField(1) required this.pkg, @HiveField(2) required this.apk, @HiveField(3) required this.icon, @HiveField(4) required this.lang, @HiveField(5) required this.version, @HiveField(6) required this.nsfw, @HiveField(7) required this.type, @HiveField(8) this.repositoryUrl = ""});
+  const _ExtensionModel({@HiveField(0) required this.name, @HiveField(1) required this.pkg, @HiveField(2) required this.apk, @HiveField(3) required this.icon, @HiveField(4) required this.lang, @HiveField(5) required this.version, @HiveField(6) required this.nsfw, @HiveField(7) required this.type, @HiveField(8) this.repositoryUrl = "", @HiveField(9) this.versionCode});
   factory _ExtensionModel.fromJson(Map<String, dynamic> json) => _$ExtensionModelFromJson(json);
 
 @override@HiveField(0) final  String name;
@@ -225,6 +226,7 @@ class _ExtensionModel implements ExtensionModel {
 @override@HiveField(6) final  int nsfw;
 @override@HiveField(7) final  String type;
 @override@JsonKey()@HiveField(8) final  String repositoryUrl;
+@override@HiveField(9) final  int? versionCode;
 
 /// Create a copy of ExtensionModel
 /// with the given fields replaced by the non-null parameter values.
@@ -239,12 +241,12 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExtensionModel&&(identical(other.name, name) || other.name == name)&&(identical(other.pkg, pkg) || other.pkg == pkg)&&(identical(other.apk, apk) || other.apk == apk)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.lang, lang) || other.lang == lang)&&(identical(other.version, version) || other.version == version)&&(identical(other.nsfw, nsfw) || other.nsfw == nsfw)&&(identical(other.type, type) || other.type == type)&&(identical(other.repositoryUrl, repositoryUrl) || other.repositoryUrl == repositoryUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExtensionModel&&(identical(other.name, name) || other.name == name)&&(identical(other.pkg, pkg) || other.pkg == pkg)&&(identical(other.apk, apk) || other.apk == apk)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.lang, lang) || other.lang == lang)&&(identical(other.version, version) || other.version == version)&&(identical(other.nsfw, nsfw) || other.nsfw == nsfw)&&(identical(other.type, type) || other.type == type)&&(identical(other.repositoryUrl, repositoryUrl) || other.repositoryUrl == repositoryUrl)&&(identical(other.versionCode, versionCode) || other.versionCode == versionCode));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,pkg,apk,icon,lang,version,nsfw,type,repositoryUrl);
+int get hashCode => Object.hash(runtimeType,name,pkg,apk,icon,lang,version,nsfw,type,repositoryUrl,versionCode);
 
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$ExtensionModelCopyWith<$Res> implements $ExtensionModelCo
   factory _$ExtensionModelCopyWith(_ExtensionModel value, $Res Function(_ExtensionModel) _then) = __$ExtensionModelCopyWithImpl;
 @override @useResult
 $Res call({
-@HiveField(0) String name,@HiveField(1) String pkg,@HiveField(2) String apk,@HiveField(3) String icon,@HiveField(4) String lang,@HiveField(5) String version,@HiveField(6) int nsfw,@HiveField(7) String type,@HiveField(8) String repositoryUrl
+@HiveField(0) String name,@HiveField(1) String pkg,@HiveField(2) String apk,@HiveField(3) String icon,@HiveField(4) String lang,@HiveField(5) String version,@HiveField(6) int nsfw,@HiveField(7) String type,@HiveField(8) String repositoryUrl,@HiveField(9) int? versionCode
 });
 
 
@@ -272,7 +274,7 @@ class __$ExtensionModelCopyWithImpl<$Res>
 
 /// Create a copy of ExtensionModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? pkg = null,Object? apk = null,Object? icon = null,Object? lang = null,Object? version = null,Object? nsfw = null,Object? type = null,Object? repositoryUrl = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? pkg = null,Object? apk = null,Object? icon = null,Object? lang = null,Object? version = null,Object? nsfw = null,Object? type = null,Object? repositoryUrl = null,Object? versionCode = freezed,}) {
   return _then(_ExtensionModel(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,pkg: null == pkg ? _self.pkg : pkg // ignore: cast_nullable_to_non_nullable
@@ -283,7 +285,8 @@ as String,version: null == version ? _self.version : version // ignore: cast_nul
 as String,nsfw: null == nsfw ? _self.nsfw : nsfw // ignore: cast_nullable_to_non_nullable
 as int,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,repositoryUrl: null == repositoryUrl ? _self.repositoryUrl : repositoryUrl // ignore: cast_nullable_to_non_nullable
-as String,
+as String,versionCode: freezed == versionCode ? _self.versionCode : versionCode // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
