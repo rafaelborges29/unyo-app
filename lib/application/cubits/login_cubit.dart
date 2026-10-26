@@ -77,7 +77,9 @@ class LoginCubit extends Cubit<LoginState> with EffectMixin<LoginState> {
         state.copyWith(
           availableUsers: [
             ...state.availableUsers.where(
-                  (user) => user.name != newLoggedUser.name,
+                  (user) => user.id != newLoggedUser.id ||
+                      (user is AnilistUserModel) != (newLoggedUser is AnilistUserModel) ||
+                      (user is LocalUserModel) != (newLoggedUser is LocalUserModel),
             ),
           ],
         ),
