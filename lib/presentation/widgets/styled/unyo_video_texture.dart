@@ -22,22 +22,22 @@ class _UnyoVideoTextureState extends State<UnyoVideoTexture> {
     super.initState();
     _videoService = widget.videoService;
     aspectRatio = _videoService.aspectRatio;
-    if (aspectRatio <= 0) {
+    if (!aspectRatio.isFinite || aspectRatio <= 0) {
       aspectRatio = 16 / 9; // Default aspect ratio
-      _aspectRatioTimer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
-        if (!mounted) {
-          timer.cancel();
-          return;
-        }
-        final newAspectRatio = _videoService.aspectRatio;
-        if (newAspectRatio > 0) {
-          setState(() {
-            aspectRatio = newAspectRatio;
-          });
-          timer.cancel();
-        }
-      });
     }
+    // The service is reused when changing episodes or servers.
+    _aspectRatioTimer = Timer.periodic(const Duration(milliseconds: 200), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      final newAspectRatio = _videoService.aspectRatio;
+      if (newAspectRatio.isFinite && newAspectRatio > 0 && newAspectRatio != aspectRatio) {
+        setState(() {
+          aspectRatio = newAspectRatio;
+        });
+      }
+    });
     _videoService.updateTexture();
   }
 
