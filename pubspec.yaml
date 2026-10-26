@@ -67,7 +67,9 @@ dependencies:
   # Localization
   easy_localization: ^3.0.8
   # FFI/Native Integration
-  cast: ^2.1.0
+  cast: 2.1.0
+  # Cast uses the discovery API removed in Bonsoir 6.
+  bonsoir: 5.1.11
   system_info3: ^4.0.2
   jni: ^0.14.2
   meta: ^1.17.0
