@@ -93,7 +93,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
         .query<MediaCollectionGraphqlDtoData>(
           query: anilist_queries.mediaListCollectionQuery,
           fromJson: MediaCollectionGraphqlDtoData.fromJson,
-          variables: {"userName": user.name, "userId": user.id, "type": "ANIME"},
+          variables: {"userName": user.name, "userId": int.parse(user.id), "type": "ANIME"},
           headers: graphQlHeaders,
           ignoreCache: ignoreCache
         );
@@ -118,7 +118,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
         .query<MediaCollectionGraphqlDtoData>(
           query: anilist_queries.mediaListCollectionQuery,
           fromJson: MediaCollectionGraphqlDtoData.fromJson,
-          variables: {"userName": user.name, "userId": user.id, "type": "MANGA"},
+          variables: {"userName": user.name, "userId": int.parse(user.id), "type": "MANGA"},
           headers: graphQlHeaders,
           ignoreCache: ignoreCache
         );
@@ -143,7 +143,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
         .query<MediaCollectionGraphqlDtoData>(
           query: anilist_queries.mediaListCollectionQuery,
           fromJson: MediaCollectionGraphqlDtoData.fromJson,
-          variables: {"userName": user.name, "userId": user.id, "type": "ANIME"},
+          variables: {"userName": user.name, "userId": int.parse(user.id), "type": "ANIME"},
           headers: graphQlHeaders,
         );
     throwIfGraphQlError(mediaCollection);
@@ -168,7 +168,7 @@ class UserRepositoryAnilist with RepositoryMixin implements UserRepository {
         .query<MediaCollectionGraphqlDtoData>(
           query: anilist_queries.mediaListCollectionQuery,
           fromJson: MediaCollectionGraphqlDtoData.fromJson,
-          variables: {"userName": user.name, "userId": user.id, "type": "MANGA"},
+          variables: {"userName": user.name, "userId": int.parse(user.id), "type": "MANGA"},
           headers: graphQlHeaders,
         );
     throwIfGraphQlError(mediaCollection);
