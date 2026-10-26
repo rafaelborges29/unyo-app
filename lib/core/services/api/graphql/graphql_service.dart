@@ -40,13 +40,18 @@ class GraphQLService {
     bool ignoreCache = true,
   }) async {
     _logger.d("Executing GraphQL MUTATION operation");
-    return _sendRequest(
+    final response = await _sendRequest(
       query: query,
       variables: variables,
       headers: headers,
       fromJson: fromJson,
-      ignoreCache: ignoreCache
+      ignoreCache: ignoreCache,
+      useCache: false,
     );
+    if (response.errors == null || response.errors!.isEmpty) {
+      _httpService.invalidateCache(_endpoint);
+    }
+    return response;
   }
 
   Future<ApiGraphQLResponse<T>> _sendRequest<T>({
@@ -55,6 +60,7 @@ class GraphQLService {
     Map<String, String>? headers,
     required T Function(Map<String, dynamic>) fromJson,
     required bool ignoreCache,
+    bool useCache = true,
   }) async {
     final body = {
       "query": query,
@@ -69,7 +75,8 @@ class GraphQLService {
         json,
         fromJson,
       ),
-      ignoreCache: ignoreCache
+      ignoreCache: ignoreCache,
+      useCache: useCache,
     );
     return response.data;
   }
