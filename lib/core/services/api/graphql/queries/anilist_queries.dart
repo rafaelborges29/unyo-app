@@ -582,6 +582,7 @@ mutation SaveMediaListEntry(\$mediaId: Int, \$progress: Int, \$progressVolumes: 
     }
     completedAt {
       day
+      month
       year
     }
     progressVolumes
