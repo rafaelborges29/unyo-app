@@ -386,22 +386,54 @@ class VideoCubit extends Cubit<VideoState> with EffectMixin<VideoState> {
   }
 
   Future<void> navigateToEpisode(int episodeIndex) async {
+    if (isClosed) return;
+    if (episodeIndex < 0 || episodeIndex >= state.extensionEpisodeResults.length) {
+      showSnackBarEffect(
+        "Episode Unavailable",
+        message: "This episode is not available in the selected extension.",
+        contentType: ContentType.warning,
+      );
+      return;
+    }
     try {
       _logger.i("Navigating to episode index: $episodeIndex");
-      _videoService.resetService();
-      VideoInfo currentVideoInfo = state.videoInfo;
       List<ext.Video> alternativeVideos = await _getVideosFromSelectedExtension(
         state.selectedExtension,
         state.extensionEpisodeResults[episodeIndex],
       );
+      if (isClosed || alternativeVideos.isEmpty) return;
+      final currentVideoInfo = state.videoInfo;
+      final currentVideoIndex = _videoService.videoIndex;
+      final currentVideo = currentVideoIndex >= 0 && currentVideoIndex < currentVideoInfo.alternativeVideos.length
+          ? currentVideoInfo.alternativeVideos[currentVideoIndex]
+          : currentVideoInfo.currentVideo;
+      int videoIndex = alternativeVideos.indexWhere(
+        (video) =>
+            video.videoUrl.trim().isNotEmpty &&
+            video.title == currentVideo.title &&
+            video.quality == currentVideo.quality,
+      );
+      if (videoIndex < 0) {
+        videoIndex = alternativeVideos.indexWhere((video) => video.videoUrl.trim().isNotEmpty);
+      }
+      if (videoIndex < 0) {
+        showSnackBarEffect(
+          "Episode Unavailable",
+          message: "No playable video links found for this episode.",
+          contentType: ContentType.warning,
+        );
+        return;
+      }
       VideoInfo videoInfo = VideoInfoModel(
-        currentVideo: alternativeVideos[currentVideoInfo.videoIndex],
+        currentVideo: alternativeVideos[videoIndex],
         alternativeVideos: alternativeVideos,
-        videoIndex: currentVideoInfo.videoIndex,
+        videoIndex: videoIndex,
         playlistIndex: episodeIndex,
       );
+      _videoService.resetService();
       await _selectNewEpisode(videoInfo);
     } catch (e, stackTrace) {
+      if (isClosed) return;
       logger.e("Error navigating to episode $e", stackTrace: stackTrace);
       handleError("Error navigating to episode", stackTrace: stackTrace);
     }
