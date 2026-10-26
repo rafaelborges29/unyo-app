@@ -37,6 +37,7 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
   late Timer _hideControlsTimer;
 
   bool _controlsVisible = true;
+  bool _controlsFocused = false;
   bool _isDragging = false;
   double _dragValue = 0.0;
 
@@ -112,31 +113,19 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
+    final controlsVisible = _controlsVisible || _controlsFocused;
+    final controls = BlocProvider.value(
       value: widget.videoCubit,
       child: BlocBuilder<VideoCubit, VideoState>(
         builder: (context, state) {
           return !_videoService.isBuffering
-              ? MouseRegion(
-                  onHover: (event) {
-                    _hideControlsTimer.cancel();
-                    _controlsVisible = true;
-                    setState(() {});
-                    _hideControlsTimer = Timer(const Duration(seconds: 4), () {
-                      if (mounted && _videoService.isPlaying) {
-                        _controlsVisible = false;
-                        setState(() {});
-                      }
-                    });
-                  },
-                  cursor: _controlsVisible ? SystemMouseCursors.basic : SystemMouseCursors.none,
+              ? IgnorePointer(
+                  ignoring: !controlsVisible,
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 300),
-                    opacity: _controlsVisible ? 1 : 0,
+                    opacity: controlsVisible ? 1 : 0,
                     child: Stack(
                       children: [
-                        // Screen Gestures
-                        GestureDetector(onTap: () => pauseVideo()),
                         // Top and Bottom Fade Overlays
                         const UnyoFadeOverlay(isTop: true),
                         const UnyoFadeOverlay(isTop: false),
@@ -485,6 +474,39 @@ class _UnyoVideoControlsState extends State<UnyoVideoControls> with TickerProvid
                   ],
                 );
         },
+      ),
+    );
+    return Focus(
+      canRequestFocus: false,
+      onFocusChange: (hasFocus) {
+        setState(() => _controlsFocused = hasFocus);
+      },
+      child: MouseRegion(
+        onHover: (event) {
+          if (_videoService.isBuffering) {
+            return;
+          }
+          _hideControlsTimer.cancel();
+          _controlsVisible = true;
+          setState(() {});
+          _hideControlsTimer = Timer(const Duration(seconds: 4), () {
+            if (mounted && _videoService.isPlaying) {
+              _controlsVisible = false;
+              setState(() {});
+            }
+          });
+        },
+        cursor: controlsVisible || _videoService.isBuffering ? SystemMouseCursors.basic : SystemMouseCursors.none,
+        // Keep the video surface interactive while the controls are hidden.
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            if (!_videoService.isBuffering) {
+              pauseVideo();
+            }
+          },
+          child: controls,
+        ),
       ),
     );
   }
