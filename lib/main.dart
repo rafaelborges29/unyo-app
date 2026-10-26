@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:unyo/data/adapters/type_adapters/color_adapter.dart';
+import 'package:unyo/data/adapters/type_adapters/settings_migration_adapter.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:logger/logger.dart';
@@ -28,7 +29,8 @@ void main() async {
   Hive
     ..init(sl<Directory>(instanceName: config.applicationSupportDirectory).path)
     ..registerAdapter(ColorAdapter())
-    ..registerAdapters();
+    ..registerAdapters()
+    ..registerAdapter(SettingsMigrationAdapter(), override: true);
   // Inject the remaining dependencies that rely on Hive and are not Lazy
   setupLocatorAfterHiveInit();
   // Setup Window Manager options
