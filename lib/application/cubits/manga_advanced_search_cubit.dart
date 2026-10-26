@@ -93,71 +93,36 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
 
   Future<void> updateSearchQuery(String query) async {
     emit(state.copyWith(searchQuery: query));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating search query $e", stackTrace: stackTrace);
-      handleError("Error updating search query", stackTrace: stackTrace);
-    }
+    await _performMangaAdvancedSearch();
   }
 
   void updateGenres(List<String> genres) {
     emit(state.copyWith(selectedGenres: genres));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating selected genres $e", stackTrace: stackTrace);
-      handleError("Error updating selected genres", stackTrace: stackTrace);
-    }
+    _performMangaAdvancedSearch();
   }
 
   void updateSearchSortOption(String sortOption) {
     emit(state.copyWith(selectedSearchSortOption: sortOption));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating search sortOption $e", stackTrace: stackTrace);
-      handleError("Error updating search sortOption", stackTrace: stackTrace);
-    }
+    _performMangaAdvancedSearch();
   }
 
   void updateSearchSortOrder(String sortOrder) {
     emit(state.copyWith(selectedSearchOrder: sortOrder));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating search sortOrder $e", stackTrace: stackTrace);
-      handleError("Error updating search sortOrder", stackTrace: stackTrace);
-    }
+    _performMangaAdvancedSearch();
   }
   Future<void> updateSelectedFormat(String? format) async {
     emit(state.copyWith(selectedFormat: format));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating format $e", stackTrace: stackTrace);
-      handleError("Error updating format", stackTrace: stackTrace);
-    }
+    await _performMangaAdvancedSearch();
   }
 
   Future<void> updateSelectedCountry(String? country) async {
     emit(state.copyWith(selectedCountry: country));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating country $e", stackTrace: stackTrace);
-      handleError("Error updating country", stackTrace: stackTrace);
-    }
+    await _performMangaAdvancedSearch();
   }
 
   Future<void> updateSelectedAiringStatus(String? airingStatus) async {
     emit(state.copyWith(selectedAiringStatus: airingStatus));
-    try {
-      _performMangaAdvancedSearch();
-    } catch (e, stackTrace) {
-      _logger.e("Error updating airing status $e", stackTrace: stackTrace);
-      handleError("Error updating airing status", stackTrace: stackTrace);
-    }
+    await _performMangaAdvancedSearch();
   }
 
   Future<void> _getLoggedUserServiceFilters(User loggedUser) async {
@@ -183,16 +148,21 @@ class MangaAdvancedSearchCubit extends Cubit<MangaAdvancedSearchState>
   }
 
   Future<void> _performMangaAdvancedSearch() async {
-    List<Manga> searchResults = await _mangaRepository.performMangaAdvancedSearch(
-      state.searchQuery,
-      state.selectedGenres,
-      state.selectedFormat,
-      state.selectedCountry,
-      state.selectedAiringStatus,
-      "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
-      1,
-      state.loggedUser
-    );
-    emit(state.copyWith(searchResults: searchResults));
+    try {
+      List<Manga> searchResults = await _mangaRepository.performMangaAdvancedSearch(
+        state.searchQuery,
+        state.selectedGenres,
+        state.selectedFormat,
+        state.selectedCountry,
+        state.selectedAiringStatus,
+        "${state.selectedSearchSortOption.toUpperCase().replaceAll(" ", "_")}_${state.selectedSearchOrder.toUpperCase()}",
+        1,
+        state.loggedUser
+      );
+      emit(state.copyWith(searchResults: searchResults));
+    } catch (e, stackTrace) {
+      _logger.e("Error performing manga advanced search $e", stackTrace: stackTrace);
+      handleError("Error performing manga advanced search", stackTrace: stackTrace);
+    }
   }
 }
