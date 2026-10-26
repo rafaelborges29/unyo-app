@@ -68,39 +68,35 @@ class _SettingsViewState extends State<_SettingsView> with TickerProviderStateMi
             const SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
-              height: 50,
               child: Row(
                 children: [
                   SizedBox(width: 40.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const TextHeadlineMedium(
-                            text: "Manage your ",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          TextHeadlineMedium(
-                            text: "Settings!",
-                            style: TextStyle(
-                              color: ColorScheme.of(context).tertiary,
-                              fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          children: [
+                            const TextHeadlineMedium(
+                              text: "Manage your ",
+                              style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                          ),
-                        ],
-                      ),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextBodyLarge(
-                            text: "You can find and change your settings here",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
+                            TextHeadlineMedium(
+                              text: "Settings!",
+                              style: TextStyle(
+                                color: ColorScheme.of(context).tertiary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const TextBodyLarge(
+                          text: "You can find and change your settings here",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

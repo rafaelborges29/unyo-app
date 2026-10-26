@@ -75,7 +75,6 @@ class _CalendarViewState extends State<_CalendarView>
             const SizedBox(height: 15),
             SizedBox(
               width: double.infinity,
-              height: 50,
               child: Row(
                 children: [
                   const SizedBox(width: 5),
@@ -88,37 +87,32 @@ class _CalendarViewState extends State<_CalendarView>
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextHeadlineMedium(
-                            text: "Anime",
-                            style: TextStyle(
-                              color: ColorScheme.of(context).tertiary,
-                              fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Wrap(
+                          children: [
+                            TextHeadlineMedium(
+                              text: "Anime",
+                              style: TextStyle(
+                                color: ColorScheme.of(context).tertiary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const TextHeadlineMedium(
-                            text:
-                            " Calendar",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          TextBodyLarge(
-                            text:
-                            "You can find the next anime releases here!",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const TextHeadlineMedium(
+                              text: " Calendar",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const TextBodyLarge(
+                          text: "You can find the next anime releases here!",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -155,8 +149,7 @@ class _CalendarViewState extends State<_CalendarView>
                 ),
               ),
             ),
-            SizedBox(
-              height: 1.sh - 135,
+            Expanded(
               child: Padding(
                 padding: EdgeInsets.only(
                   left: 15.0.w,
