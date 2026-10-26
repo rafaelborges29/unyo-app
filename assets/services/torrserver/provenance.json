@@ -1,0 +1,86 @@
+{
+  "source": {
+    "repository": "https://github.com/YouROK/TorrServer.git",
+    "tag": "MatriX.137",
+    "revision": "19e4f4ef78ad92e68a19fafc561003ca33e0dea8"
+  },
+  "toolchain": "go1.26.10",
+  "toolchain_reason": "Go 1.26 retains macOS 12 support; Go 1.27 requires macOS 13.",
+  "source_changes": "Only server/go.mod and server/go.sum change. Use the committed web assets and API docs without regeneration.",
+  "prepare_commands": [
+    "git clone https://github.com/YouROK/TorrServer.git",
+    "git -C TorrServer checkout --detach 19e4f4ef78ad92e68a19fafc561003ca33e0dea8",
+    "cd TorrServer/server",
+    "GOTOOLCHAIN=go1.26.10 go get github.com/quic-go/quic-go@v0.59.1 golang.org/x/image@v0.45.0 golang.org/x/net@v0.60.0",
+    "GOTOOLCHAIN=go1.26.10 go mod verify"
+  ],
+  "module_file_sha256": {
+    "go.mod": "cd50d56e05337611c2d9e3a5ed3303b5e6022fece092acd3e13d405f0a936201",
+    "go.sum": "719a89dc50aeb8a1e9c74906155b6e88d62c5ca9503df59159c957617480d8bc"
+  },
+  "updated_modules": {
+    "github.com/quic-go/quic-go": "v0.59.1",
+    "golang.org/x/crypto": "v0.57.0",
+    "golang.org/x/image": "v0.45.0",
+    "golang.org/x/mod": "v0.41.0",
+    "golang.org/x/net": "v0.60.0",
+    "golang.org/x/sync": "v0.23.0",
+    "golang.org/x/sys": "v0.48.0",
+    "golang.org/x/text": "v0.42.0",
+    "golang.org/x/tools": "v0.49.0"
+  },
+  "build": {
+    "working_directory": "TorrServer/server",
+    "environment": {
+      "GOTOOLCHAIN": "go1.26.10",
+      "CGO_ENABLED": "0",
+      "GOAMD64": "v1",
+      "GOARM64": "v8.0"
+    },
+    "command": "go build -mod=readonly -tags=nosqlite -trimpath -ldflags=\"-s -w\" -o <output> ./cmd",
+    "targets": "Set GOOS and GOARCH from each binary entry.",
+    "sbom": "Go build metadata embedded in each binary records module versions and checksums; inspect with go version -m <binary>.",
+    "reproducibility": "All five SHA-256 checksums reproduced from a second clean checkout."
+  },
+  "advisory_scan": {
+    "scanner": "golang.org/x/vuln/cmd/govulncheck@v1.9.0",
+    "database": "https://vuln.go.dev",
+    "database_modified": "2026-10-20T00:20:56Z",
+    "binary_command": "govulncheck -mode=binary <binary>",
+    "binary_result": "Each target reports only GO-2026-5932 (unmaintained OpenPGP; no fixed version). This is a component advisory match, not a demonstrated reachable exploit.",
+    "source_command": "CGO_ENABLED=0 GOOS=<GOOS> GOARCH=<GOARCH> govulncheck -tags=nosqlite ./cmd",
+    "source_result": "No vulnerable calls or imported vulnerable packages on all five targets. go list -tags=nosqlite -deps ./cmd excludes golang.org/x/crypto/openpgp on every target."
+  },
+  "binaries": [
+    {
+      "path": "amd64/linux/torrserver",
+      "GOOS": "linux",
+      "GOARCH": "amd64",
+      "sha256": "6e98137257728c236c3b41ee87964a0a4ae89ed3565bdd2eba16dc3d442fa5b5"
+    },
+    {
+      "path": "arm64/linux/torrserver",
+      "GOOS": "linux",
+      "GOARCH": "arm64",
+      "sha256": "15edddd42fcf45f46f16c40bdbadbaa0842e97265c9c9254530654527343a073"
+    },
+    {
+      "path": "amd64/windows/torrserver.exe",
+      "GOOS": "windows",
+      "GOARCH": "amd64",
+      "sha256": "9c7c2eac00ae6169a578b876464d8bbf8458ce591ec30489e8190370fdcd0de0"
+    },
+    {
+      "path": "amd64/macos/torrserver",
+      "GOOS": "darwin",
+      "GOARCH": "amd64",
+      "sha256": "6139fc67885578be1164e56ca3f24ce77af75de69f27fb9d14dc4a73cc414613"
+    },
+    {
+      "path": "arm64/macos/torrserver",
+      "GOOS": "darwin",
+      "GOARCH": "arm64",
+      "sha256": "3c0f4ea42536c63ee3189fdf8b3ff2a90b08c443e6f966a19dd6d44980f764e6"
+    }
+  ]
+}
