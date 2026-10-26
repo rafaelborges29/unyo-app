@@ -194,34 +194,33 @@ class HttpService {
     String endpoint, {
     required T Function(Map<String, dynamic>) fromJson,
     Map<String, String>? headers,
-    Object? body,
+    String? body,
   }) async {
     final uri = Uri.parse(endpoint);
     _logger.d("Handling $method request to $uri");
     try {
       final response = await retryOptions.retry(() async {
-        final request = switch (method) {
-          'POST' => client.post(
-            uri,
-            headers: _defaultHeaders(headers),
-            body: body,
-          ),
-          'GET' => client.get(uri, headers: _defaultHeaders(headers)),
-          'PUT' => client.put(
-            uri,
-            headers: _defaultHeaders(headers),
-            body: body,
-          ),
-          'PATCH' => client.patch(
-            uri,
-            headers: _defaultHeaders(headers),
-            body: body,
-          ),
-          'DELETE' => client.delete(uri, headers: _defaultHeaders(headers)),
-          _ => throw UnsupportedError('Method not supported'),
-        };
-        return await request.timeout(timeout);
-      }, retryIf: (e) => e is SocketException || e is TimeoutException);
+        if (!const ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].contains(method)) {
+          throw UnsupportedError('Method not supported');
+        }
+        final abort = Completer<void>();
+        final request = http.AbortableRequest(
+          method,
+          uri,
+          abortTrigger: abort.future,
+        )..headers.addAll(_defaultHeaders(headers));
+        if (body != null) request.body = body;
+        final timer = Timer(timeout, abort.complete);
+        try {
+          // Await the entire response so aborting also stops a stalled body
+          // before this attempt finishes and a retry can start.
+          return await http.Response.fromStream(await client.send(request));
+        } on http.RequestAbortedException {
+          throw TimeoutException('Request timed out', timeout);
+        } finally {
+          timer.cancel();
+        }
+      }, retryIf: (e) => method == 'GET' && (e is SocketException || e is TimeoutException));
       _logger.d(
         "Handling response received from $uri with status code ${response.statusCode}",
       );
