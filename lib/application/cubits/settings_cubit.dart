@@ -204,8 +204,15 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
   }
 
   Future<void> enableUseWallpaperAsThemeColor(bool enable) async {
-    if (!enable) return;
     try {
+      if (!enable) {
+        _themeService.updateThemeFromColors(
+          loggedUser: state.loggedUser,
+          useWallpaperAsThemeColor: false,
+          primary: _themeService.defaultPrimaryColor,
+        );
+        return;
+      }
       List<Color> wallpaperColors = [];
       switch (state.loggedUser) {
         case AnilistUserModel anilistUserModel:
