@@ -4,6 +4,8 @@ import 'package:material_ui/material_ui.dart';
 abstract class AppEffect {}
 
 // Navigation Effects
+class ResetSessionEffect extends AppEffect {}
+
 class ReplaceRouteEffect extends AppEffect {
   final String routeName;
   final Object? arguments;

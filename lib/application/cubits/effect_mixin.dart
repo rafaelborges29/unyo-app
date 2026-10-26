@@ -69,6 +69,11 @@ mixin EffectMixin<State> on Cubit<State> {
     addEffect(ReplaceRouteEffect(path));
   }
 
+  void resetSessionEffect() {
+    logger.i("Reset session navigation");
+    addEffect(ResetSessionEffect());
+  }
+
   void navigateRouteEffect({required String path}) {
     logger.i("NavigateRoute with path: $path");
     addEffect(NavigateRouteEffect(path));

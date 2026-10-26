@@ -12,6 +12,7 @@ import 'package:unyo/application/cubits/effect_mixin.dart';
 import 'package:unyo/application/states/home_state.dart';
 import 'package:unyo/core/di/locator.dart';
 import 'package:unyo/core/enums/selected_menu_option.dart';
+import 'package:unyo/core/services/api/http/http_exception.dart';
 
 import 'package:unyo/core/notification/anime_notifier.dart';
 import 'package:unyo/core/notification/manga_notifier.dart';
@@ -44,6 +45,7 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
   late StreamSubscription<User> _newLoggedUserSubscription;
   late StreamSubscription<ReloadType> _reloadSubscription;
   final Logger _logger = sl<Logger>();
+  bool _sessionExpired = false;
 
   HomeCubit(
     this._loggedUserNotifier,
@@ -87,12 +89,15 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
     _newLoggedUserSubscription = _loggedUserNotifier.userStream.listen((
       loggedUser,
     ) async {
+      if (isClosed || _sessionExpired) return;
       emit(
         state.copyWith(loggedUser: loggedUser),
       );
       if (!state.userLoaded) {
         await _getUserInfo(loggedUser);
+        if (isClosed || _sessionExpired) return;
         await _getMediaCoverImages(loggedUser);
+        if (isClosed || _sessionExpired) return;
         _menuBarNotifier.showMenuBar(true);
         emit(state.copyWith(userLoaded: true, isLoading: false));
       }
@@ -138,14 +143,17 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
   }
 
   Future<void> _getUserInfo(User user, {bool ignoreCacheAnime = false, bool ignoreCacheManga = false}) async {
+    if (isClosed || _sessionExpired) return;
     try {
       switch (user) {
         case AnilistUserModel anilistUserModel:
           _logger.i("Fetching Anilist User lists");
           List<Anime> watchingList = await _userRepositoryAnilist
               .getUserWatchingList(anilistUserModel, ignoreCache: ignoreCacheAnime);
+          if (isClosed || _sessionExpired) return;
           List<Manga> readingList = await _userRepositoryAnilist
               .getUserReadingList(anilistUserModel, ignoreCache: ignoreCacheManga);
+          if (isClosed || _sessionExpired) return;
           emit(
             state.copyWith(
               continueWatching: watchingList,
@@ -155,17 +163,26 @@ class HomeCubit extends Cubit<HomeState> with EffectMixin<HomeState> {
         case LocalUserModel localUserModel:
       }
     } catch (e, stackTrace) {
+      if (isClosed || _sessionExpired) return;
+      if (e is HttpServerException && e.statusCode == 401) {
+        _logger.w("Anilist session expired, returning to login");
+        _sessionExpired = true;
+        resetSessionEffect();
+        return;
+      }
       handleError("Error fetching user info: $e", stackTrace: stackTrace);
-      replaceRouteEffect(path: "/login");
     }
   }
 
   Future<void> _getMediaCoverImages(User loggedUser, {bool ignoreCache = false}) async {
+    if (isClosed || _sessionExpired) return;
     try {
       _logger.i("Fetching Media Cover Images");
       List<String> mediaCoverImages = await _animeRepository.getMediaCoverImages(loggedUser, ignoreCache: ignoreCache);
+      if (isClosed || _sessionExpired) return;
       emit(state.copyWith(mediaCoverImages: mediaCoverImages));
     } catch (e, stackTrace) {
+      if (isClosed || _sessionExpired) return;
       handleError("Error fetching media cover images: $e", stackTrace: stackTrace);
     }
   }
