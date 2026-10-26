@@ -100,6 +100,7 @@ class VideoService {
     _isBuffering = true;
     try {
       final resolvedUrl = await _resolveVideoUrl(_video.videoUrl);
+      _setPlayerHttpHeaders(video.headers);
       _player.media = resolvedUrl;
       await _player.prepare();
     } catch (e, st) {
@@ -228,6 +229,7 @@ class VideoService {
     _isBuffering = true;
     try {
       final resolvedUrl = await _resolveVideoUrl(video.videoUrl);
+      _setPlayerHttpHeaders(video.headers);
       _player.media = resolvedUrl;
       await _player.prepare();
     } catch (e, st) {
@@ -409,15 +411,13 @@ class VideoService {
   }
 
   void _setPlayerHttpHeaders(ext.Headers? headers) {
-    if (headers == null || headers.headersMap.isEmpty) return;
-    final userAgent = headers.headersMap.entries
+    final headersMap = headers?.headersMap ?? const <String, String>{};
+    final userAgent = headersMap.entries
         .firstWhere((e) => e.key.toLowerCase() == 'user-agent', orElse: () => const MapEntry('', ''))
         .value;
 
-    if (userAgent.isNotEmpty) {
-      _player.setProperty('user_agent', userAgent);
-    }
-    final formattedHeaders = headers.headersMap.entries
+    _player.setProperty('user_agent', userAgent);
+    final formattedHeaders = headersMap.entries
         .map((e) {
           // Fix cookie separator logic (HTTP spec requires '; ' not ',')
           final value = e.key.toLowerCase() == 'cookie' ? e.value.replaceAll(',', '; ') : e.value;
@@ -425,10 +425,8 @@ class VideoService {
         })
         .join('\r\n'); // Join with CRLF
 
-    if (formattedHeaders.isNotEmpty) {
-      _player.setProperty('headers', formattedHeaders);
-      _player.setProperty('avio.headers', formattedHeaders);
-    }
+    _player.setProperty('headers', formattedHeaders);
+    _player.setProperty('avio.headers', formattedHeaders);
   }
 
   void _setPlayerLogsHandler() {
