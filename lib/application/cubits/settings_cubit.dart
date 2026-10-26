@@ -29,7 +29,6 @@ import 'package:unyo/presentation/widgets/styled/light_unyo_button.dart';
 
 class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState> {
   final Logger _logger = sl<Logger>();
-  late Color _selectedColor;
 
   // Repositories
   final UserRepositoryAnilist _userRepositoryAnilist;
@@ -73,7 +72,6 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) async {
       emit(state.copyWith(loggedUser: loggedUser));
     });
-    _selectedColor = state.loggedUser.settings.themeColor;
   }
 
   Future<void> updateMediaMetadataService(String? newService) async {
@@ -292,6 +290,7 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
   }
 
   void openColorPickerDialog(BuildContext context) {
+    Color selectedColor = state.loggedUser.settings.themeColor;
     showWidgetDialogEffect(
       dialog: AlertDialog(
         backgroundColor: const Color.fromARGB(255, 30, 30, 30),
@@ -309,9 +308,9 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
                   children: [
                     ColorPicker(
                       enableAlpha: false,
-                      pickerColor: state.loggedUser.settings.themeColor,
+                      pickerColor: selectedColor,
                       pickerAreaBorderRadius: BorderRadius.circular(40.0),
-                      onColorChanged: (color) => _selectedColor = color,
+                      onColorChanged: (color) => selectedColor = color,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -328,7 +327,7 @@ class SettingsCubit extends Cubit<SettingsState> with EffectMixin<SettingsState>
                           onPressed: () {
                             _themeService.updateThemeFromColors(
                               loggedUser: state.loggedUser,
-                              primary: _selectedColor,
+                              primary: selectedColor,
                               useWallpaperAsThemeColor: false,
                             );
                             Navigator.of(dialogContext).pop();
