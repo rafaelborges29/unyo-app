@@ -43,10 +43,14 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
           // headers: graphQlHeaders,
         );
     throwIfGraphQlError(animeDetailsQueryResponse);
-    AnimeDetails animeDetails = ShikimoriAnimeDetailsModel.fromAnimeDetailsQuery(
+    final animeDetails = ShikimoriAnimeDetailsModel.fromAnimeDetailsQuery(
       animeDetailsQueryResponse.data,
     );
-    return (true, animeDetails);
+    return (true, animeDetails.copyWith(
+      recommendedAnimes: animeDetails.recommendedAnimes
+          .where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent)
+          .toList(),
+    ));
   }
 
   @override
@@ -73,7 +77,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
     List<Anime> animes = animePopularQueryResponse.data.animes
         .map((anime) => ShikimoriAnimeModel.fromAnimesPopularQuery(anime))
         .toList();
-    return (true, animes);
+    return (true, animes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -104,7 +108,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
     List<Anime> animes = animeRecentlyCompletedQueryResponse.data.animes
         .map((anime) => ShikimoriAnimeModel.fromAnimesRecentlyReleasedQuery(anime))
         .toList();
-    return (true, animes);
+    return (true, animes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -135,7 +139,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
     List<Anime> animes = animeRecentlyCompletedQueryResponse.data.animes
         .map((anime) => ShikimoriAnimeModel.fromAnimesRecentlyReleasedQuery(anime))
         .toList();
-    return (true, animes);
+    return (true, animes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -162,7 +166,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
     List<Anime> animes = animeTrendingQueryResponse.data.animes
         .map((anime) => ShikimoriAnimeModel.fromAnimesTrendingQuery(anime))
         .toList();
-    return (true, animes);
+    return (true, animes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
@@ -183,7 +187,7 @@ class AnimeRepositoryShikimori with RepositoryMixin implements AnimeRepository {
     List<Anime> animes = animeUpcomingQueryResponse.data.animes
         .map((anime) => ShikimoriAnimeModel.fromAnimesPopularQuery(anime))
         .toList();
-    return (true, animes);
+    return (true, animes.where((anime) => !anime.isAdult || loggedUser.settings.enableNsfwContent).toList());
   }
 
   @override
