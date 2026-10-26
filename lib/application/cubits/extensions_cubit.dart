@@ -25,6 +25,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
   // Notifiers
   final UserNotifier _loggedUserNotifier;
   late StreamSubscription<User> _loggedUserSubscription;
+  bool _initializingExtensions = false;
 
   ExtensionsCubit(this._extensionRepositoryAniyomi, this._loggedUserNotifier)
     : super(
@@ -58,6 +59,7 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
     _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) {
       emit(state.copyWith(loggedUser: loggedUser));
       if (!state.userLoaded) {
+        initializeExtensions();
         _fetchAvailableAnimeExtensions(loggedUser);
         _fetchAvailableMangaExtensions(loggedUser);
         _fetchInstaledAnimeExtensions(loggedUser);
@@ -67,6 +69,22 @@ class ExtensionsCubit extends Cubit<ExtensionsState> with EffectMixin<Extensions
         emit(state.copyWith(userLoaded: true));
       }
     });
+  }
+
+  Future<void> initializeExtensions() async {
+    if (isClosed || _initializingExtensions) return;
+    _initializingExtensions = true;
+    try {
+      await _extensionRepositoryAniyomi.initializeExtensions();
+    } catch (e, stackTrace) {
+      if (isClosed) return;
+      handleError(
+        "Failed to load installed extensions: $e. Check the extension runtime setup, then retry using the reload button.",
+        stackTrace: stackTrace,
+      );
+    } finally {
+      _initializingExtensions = false;
+    }
   }
 
   Future<void> downloadExtension(Extension extension) async {

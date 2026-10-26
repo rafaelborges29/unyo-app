@@ -98,6 +98,11 @@ class _ExtensionsViewState extends State<_ExtensionsView> with TickerProviderSta
               child: Row(
                 children: [
                   SizedBox(width: 40.w),
+                  IconButton(
+                    tooltip: 'Retry loading installed extensions',
+                    onPressed: context.read<ExtensionsCubit>().initializeExtensions,
+                    icon: const Icon(Icons.refresh),
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

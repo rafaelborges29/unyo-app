@@ -12,7 +12,6 @@ import 'package:unyo_lib/jmodels/jvideo.dart';
 import 'package:logger/logger.dart';
 import 'package:unyo/core/di/locator.dart';
 import 'package:unyo/core/enums/extension_type.dart';
-import 'package:unyo/core/notification/user_notifier.dart';
 import 'package:unyo/core/services/api/dto/extensions/aniyomi_repo_json_entity.dart';
 import 'package:unyo/core/services/api/dto/extensions/tachiyomi_repo_json_entity.dart';
 import 'package:unyo/core/services/api/http/api_response.dart';
@@ -31,20 +30,36 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
   final AniyomiBridge _aniyomiBridge = sl<AniyomiBridge>();
   // Boxes
   late Box<Extension> _aniyomiExtensionsBox;
-  // Notifiers
-  final UserNotifier _loggedUserNotifier;
-  late StreamSubscription<User> _loggedUserSubscription;
+  Future<void>? _initialization;
+  bool _disposed = false;
 
-  ExtensionRepositoryAniyomi(this._loggedUserNotifier) {
+  ExtensionRepositoryAniyomi() {
     _init();
   }
 
   Future<void> _init() async {
-    _loggedUserSubscription = _loggedUserNotifier.userStream.listen((loggedUser) async {
-        _loadInstalledAnimeExtensions(loggedUser);
-        _loadInstalledMangaExtensions(loggedUser);
-        _closeLoggedUserSubscription();
-    });
+    try {
+      await initializeExtensions();
+    } catch (e, stackTrace) {
+      if (!_disposed) {
+        _logger.e(
+          "Failed to load installed extensions: $e",
+          stackTrace: stackTrace,
+        );
+      }
+    }
+  }
+
+  @override
+  Future<void> initializeExtensions() {
+    if (_disposed) {
+      return Future<void>.error(StateError('Extension repository is disposed'));
+    }
+    return _initialization ??= _loadInstalledExtensions();
+  }
+
+  void dispose() {
+    _disposed = true;
   }
 
   Future<Set<Extension>> _fetchAllAnimeExtensions(User user) async {
@@ -319,33 +334,31 @@ class ExtensionRepositoryAniyomi implements ExtensionRepository {
     return 0;
   }
 
-  Future<void> _loadInstalledAnimeExtensions(User loggedUser) async {
-    Set<Extension> installedExtensions = await getInstalledAnimeExtensions(loggedUser);
-    if (!_aniyomiBridge.isReady()) {
-      Timer(const Duration(milliseconds: 500), () {
-        _loadInstalledAnimeExtensions(loggedUser);
-      });
-      return;
-    }
-    for (Extension extension in installedExtensions) {
-      _aniyomiBridge.loadAnimeExtension(extension.apk, extension.pkg);
-    }
-  }
+  Future<void> _loadInstalledExtensions() async {
+    try {
+      _aniyomiExtensionsBox = await Hive.openBox<Extension>('aniyomiExtensions');
+      if (_disposed || _aniyomiExtensionsBox.isEmpty) return;
 
-  Future<void> _loadInstalledMangaExtensions(User loggedUser) async {
-    Set<Extension> installedExtensions = await getInstalledMangaExtensions(loggedUser);
-    if (!_aniyomiBridge.isReady()) {
-      Timer(const Duration(milliseconds: 500), () {
-        _loadInstalledMangaExtensions(loggedUser);
-      });
-      return;
-    }
-    for (Extension extension in installedExtensions) {
-      _aniyomiBridge.loadMangaExtension(extension.apk, extension.pkg);
-    }
-  }
+      const timeout = Duration(seconds: 30);
+      final stopwatch = Stopwatch()..start();
+      while (!_disposed && !_aniyomiBridge.isReady()) {
+        if (stopwatch.elapsed >= timeout) {
+          throw TimeoutException('Extension runtime did not become ready', timeout);
+        }
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      }
+      if (_disposed) return;
 
-  Future<void> _closeLoggedUserSubscription() async{
-    _loggedUserSubscription.cancel();
+      for (final extension in _aniyomiExtensionsBox.values) {
+        if (extension.type == ExtensionType.ANIYOMI) {
+          _aniyomiBridge.loadAnimeExtension(extension.apk, extension.pkg);
+        } else if (extension.type == ExtensionType.TACHIYOMI) {
+          _aniyomiBridge.loadMangaExtension(extension.apk, extension.pkg);
+        }
+      }
+    } catch (_) {
+      _initialization = null;
+      rethrow;
+    }
   }
 }
