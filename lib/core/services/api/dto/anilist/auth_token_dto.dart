@@ -10,7 +10,8 @@ class AuthTokenEntity {
   factory AuthTokenEntity.fromJson(Map<String, dynamic> json) {
     return AuthTokenEntity(
       accessToken: json['access_token'],
-      refreshToken: json['refresh_token'],
+      // AniList does not issue refresh tokens; retain the stored user format.
+      refreshToken: json['refresh_token'] ?? '',
     );
   }
 }
